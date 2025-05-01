@@ -62,7 +62,7 @@ async function buyEvent(req, res) {
 
     const marketAfter = calculateMarketPrices(newShares, b_constant);
 
-    await pool.query(
+    await client.query(
       `INSERT INTO price_snapshots (event_id, prices)
        VALUES ($1, $2)`,
       [event_id, marketAfter]
@@ -70,10 +70,10 @@ async function buyEvent(req, res) {
 
     await client.query("COMMIT");
 
-    console.log(`[BUY] ${user_id} bought ${shares} shares of ${choice}`);
-    console.log(`Current Shares:`, newShares);
-    console.log(`Current Market:`, marketAfter);
-    ("------------------------------------------------------------");
+    // console.log(`[BUY] ${user_id} bought ${shares} shares of ${choice}`);
+    // console.log(`Current Shares:`, newShares);
+    // console.log(`Current Market:`, marketAfter);
+    // ("------------------------------------------------------------");
 
     res.status(200).json({
       rawCost,
@@ -138,7 +138,7 @@ async function sellEvent(req, res) {
 
     const marketAfter = calculateMarketPrices(newShares, b_constant);
 
-    await pool.query(
+    await client.query(
       `INSERT INTO price_snapshots (event_id, prices)
        VALUES ($1, $2)`,
       [event_id, marketAfter]
@@ -146,10 +146,10 @@ async function sellEvent(req, res) {
 
     await client.query("COMMIT");
 
-    console.log(`[SELL] ${user_id} sold ${shares} shares of ${choice}`);
-    console.log(`New Shares:`, newShares);
-    console.log(`Market After:`, marketAfter);
-    console.log("------------------------------------------------------------");
+    // console.log(`[SELL] ${user_id} sold ${shares} shares of ${choice}`);
+    // console.log(`New Shares:`, newShares);
+    // console.log(`Market After:`, marketAfter);
+    // console.log("------------------------------------------------------------");
 
     res.status(200).json({
       rawPayout,

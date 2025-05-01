@@ -18,13 +18,20 @@
       #chartTitle {
         text-align: center;
         font-size: 2rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
+      }
+      #customLegend {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 10px;
       }
       #noDataMessage {
         display: none;
         color: red;
         font-weight: bold;
-        font-size: 1.5rem;
+        font-size: 1rem;
         text-align: center;
         margin-top: 2rem;
       }
@@ -45,11 +52,37 @@
         background-color: #3062f7;
         color: white;
       }
+      #loadingSpinner {
+        display: none;
+        text-align: center;
+        margin-top: 10px;
+      }
+      #loadingSpinner div {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        border: 3px solid #ccc;
+        border-top: 3px solid #3062f7;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
     <h2 id="chartTitle">Loading event title...</h2>
+    <div id="customLegend"></div>
     <div id="filterButtons">
+      <button class="filter-btn" data-range="5M">5M</button>
+      <button class="filter-btn" data-range="15M">15M</button>
+      <button class="filter-btn" data-range="30M">30M</button>
       <button class="filter-btn" data-range="1H">1H</button>
       <button class="filter-btn" data-range="6H">6H</button>
       <button class="filter-btn" data-range="1D">1D</button>
@@ -58,13 +91,23 @@
       <button class="filter-btn active" data-range="ALL">ALL</button>
     </div>
     <canvas id="priceChart" height="100"></canvas>
+    <div id="loadingSpinner"><div></div></div>
+    <div
+      id="lastUpdated"
+      style="text-align: right; font-size: 0.9rem; color: #555; margin-top: 5px"
+    >
+      Last updated: --
+    </div>
     <p id="noDataMessage">No price data yet for this event.</p>
-
     <script>
       let originalData = [];
       let chart;
+      let eventId = null;
 
       const rangeMap = {
+        "5M": 5 * 60 * 1000,
+        "15M": 15 * 60 * 1000,
+        "30M": 30 * 60 * 1000,
         "1H": 60 * 60 * 1000,
         "6H": 6 * 60 * 60 * 1000,
         "1D": 24 * 60 * 60 * 1000,
@@ -77,70 +120,99 @@
         return await response.json();
       }
 
+      function updateLatestPriceMarkers(latestSnapshot, colors) {
+        const container = document.getElementById("customLegend");
+        container.innerHTML = "";
+        if (!latestSnapshot || !latestSnapshot.prices) return;
+        Object.entries(latestSnapshot.prices).forEach(([key, value], i) => {
+          const wrapper = document.createElement("div");
+          wrapper.style.display = "flex";
+          wrapper.style.alignItems = "center";
+          wrapper.style.fontWeight = "bold";
+          wrapper.style.fontSize = "0.95rem";
+          wrapper.style.color = "#333";
+          const dot = document.createElement("span");
+          dot.style.display = "inline-block";
+          dot.style.width = "10px";
+          dot.style.height = "10px";
+          dot.style.borderRadius = "50%";
+          dot.style.marginRight = "6px";
+          dot.style.backgroundColor = colors[i % colors.length];
+          const label = document.createElement("span");
+          label.textContent = `${key} ${(value * 100).toFixed(1)}%`;
+          wrapper.appendChild(dot);
+          wrapper.appendChild(label);
+          container.appendChild(wrapper);
+        });
+      }
+
       function renderChart(title, filteredData) {
         document.getElementById("chartTitle").textContent =
           title || "Untitled Event";
-
+        const colors = ["#007bff", "#dc3545", "#6f42c1", "#28a745", "#ffc107"];
+        let hasRealData = false;
         if (!filteredData || filteredData.length === 0) {
           document.getElementById("noDataMessage").style.display = "block";
           filteredData = [
-            {
-              snapshot_time: new Date(),
-              prices: { A: 0, B: 0, C: 0 },
-            },
+            { snapshot_time: new Date(), prices: { A: 0, B: 0, C: 0 } },
           ];
         } else {
           document.getElementById("noDataMessage").style.display = "none";
+          hasRealData = true;
         }
-
+        updateLatestPriceMarkers(filteredData[filteredData.length - 1], colors);
         const labels = filteredData.map(
           (entry) => new Date(entry.snapshot_time)
         );
         const keys = Object.keys(filteredData[0].prices || {});
-        const colors = ["green", "red", "blue", "orange", "purple"];
-
         const datasets = keys.map((key, i) => ({
           label: key,
           data: filteredData.map((entry) => entry.prices[key]),
           fill: false,
           borderColor: colors[i % colors.length],
           tension: 0.2,
+          pointRadius: 2,
         }));
-
-        if (chart) chart.destroy(); // destroy previous chart
-
+        if (chart) chart.destroy();
         chart = new Chart(document.getElementById("priceChart"), {
           type: "line",
-          data: {
-            labels,
-            datasets,
-          },
+          data: { labels, datasets },
           options: {
             responsive: true,
+            animation: hasRealData
+              ? { duration: 1000, easing: "easeOutElastic" }
+              : false,
+            animations: {
+              y: { duration: 800, easing: "easeOutBack" },
+              radius: { duration: 400, easing: "easeOutBounce" },
+            },
+            elements: { point: { radius: 3 } },
             scales: {
               x: {
                 type: "time",
-                time: {
-                  tooltipFormat: "MMM d, h:mm a",
-                  unit: "hour",
-                },
-                title: {
-                  display: true,
-                  text: "Time",
-                },
+                time: { tooltipFormat: "MMM d, h:mm a", unit: "hour" },
+                title: { display: true, text: "Time" },
               },
               y: {
                 beginAtZero: true,
                 max: 1,
-                title: {
-                  display: true,
-                  text: "Price (Probability)",
-                },
+                title: { display: true, text: "Price (Probability)" },
               },
             },
             plugins: {
-              legend: { position: "top" },
-              tooltip: { mode: "index", intersect: false },
+              legend: { display: false },
+              tooltip: {
+                mode: "nearest",
+                intersect: false,
+                axis: "x",
+                callbacks: {
+                  label: function (context) {
+                    const label = context.dataset.label || "";
+                    const value = context.raw;
+                    return `${label}: ${(value * 100).toFixed(1)}%`;
+                  },
+                },
+              },
             },
           },
         });
@@ -148,7 +220,6 @@
 
       function filterData(range) {
         if (range === "ALL") return originalData;
-
         const now = new Date();
         const from = new Date(now.getTime() - rangeMap[range]);
         return originalData.filter(
@@ -156,36 +227,77 @@
         );
       }
 
-      function setupFilters(title) {
+      function setupFilters() {
         const buttons = document.querySelectorAll(".filter-btn");
+        const savedRange = localStorage.getItem("lastFilterRange") || "ALL";
+        buttons.forEach((b) => {
+          if (b.getAttribute("data-range") === savedRange)
+            b.classList.add("active");
+          else b.classList.remove("active");
+        });
+        renderChart(
+          document.getElementById("chartTitle").textContent,
+          filterData(savedRange)
+        );
         buttons.forEach((btn) => {
           btn.addEventListener("click", () => {
             buttons.forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
-
             const range = btn.getAttribute("data-range");
-            const filtered = filterData(range);
-            renderChart(title, filtered);
+            localStorage.setItem("lastFilterRange", range);
+            renderChart(
+              document.getElementById("chartTitle").textContent,
+              filterData(range)
+            );
           });
         });
       }
 
-      async function init() {
-        const params = new URLSearchParams(window.location.search);
-        const eventId = params.get("event_id");
-        if (!eventId) {
-          alert("Missing event_id in URL!");
-          return;
-        }
+      function getCurrentRange() {
+        return localStorage.getItem("lastFilterRange") || "ALL";
+      }
 
+      async function loadAndRender() {
         try {
+          document.getElementById("loadingSpinner").style.display = "block";
           const json = await fetchData(eventId);
           originalData = json.data || [];
-          renderChart(json.title, originalData);
-          setupFilters(json.title);
+          renderChart(json.title, filterData(getCurrentRange()));
+          updateTimestamp();
         } catch (err) {
           console.error("Failed to load data:", err);
+        } finally {
+          document.getElementById("loadingSpinner").style.display = "none";
         }
+      }
+
+      function updateTimestamp() {
+        const now = new Date();
+        const formatted = now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        document.getElementById(
+          "lastUpdated"
+        ).textContent = `Last updated: ${formatted}`;
+      }
+
+      function init() {
+        const params = new URLSearchParams(window.location.search);
+        eventId = params.get("event_id");
+        if (!eventId) return alert("Missing event_id in URL!");
+        loadAndRender();
+        setupFilters();
+        setInterval(() => {
+          const activeRange = getCurrentRange();
+          loadAndRender().then(() => {
+            renderChart(
+              document.getElementById("chartTitle").textContent,
+              filterData(activeRange)
+            );
+          });
+        }, 10000);
       }
 
       init();
