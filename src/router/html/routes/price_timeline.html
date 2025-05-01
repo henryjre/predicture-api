@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prediction Market Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+        background: #f9f9f9;
+      }
+      canvas {
+        max-width: 100%;
+      }
+      #chartTitle {
+        text-align: center;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+      #noDataMessage {
+        display: none;
+        color: red;
+        font-weight: bold;
+        font-size: 1.5rem;
+        text-align: center;
+        margin-top: 2rem;
+      }
+      #filterButtons {
+        text-align: center;
+        margin: 20px 0;
+      }
+      .filter-btn {
+        border: none;
+        padding: 8px 14px;
+        margin: 0 5px;
+        cursor: pointer;
+        background-color: #ddd;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .filter-btn.active {
+        background-color: #3062f7;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h2 id="chartTitle">Loading event title...</h2>
+    <div id="filterButtons">
+      <button class="filter-btn" data-range="1H">1H</button>
+      <button class="filter-btn" data-range="6H">6H</button>
+      <button class="filter-btn" data-range="1D">1D</button>
+      <button class="filter-btn" data-range="1W">1W</button>
+      <button class="filter-btn" data-range="1M">1M</button>
+      <button class="filter-btn active" data-range="ALL">ALL</button>
+    </div>
+    <canvas id="priceChart" height="100"></canvas>
+    <p id="noDataMessage">No price data yet for this event.</p>
+
+    <script>
+      let originalData = [];
+      let chart;
+
+      const rangeMap = {
+        "1H": 60 * 60 * 1000,
+        "6H": 6 * 60 * 60 * 1000,
+        "1D": 24 * 60 * 60 * 1000,
+        "1W": 7 * 24 * 60 * 60 * 1000,
+        "1M": 30 * 24 * 60 * 60 * 1000,
+      };
+
+      async function fetchData(eventId) {
+        const response = await fetch(`/api/events/${eventId}/prices`);
+        return await response.json();
+      }
+
+      function renderChart(title, filteredData) {
+        document.getElementById("chartTitle").textContent =
+          title || "Untitled Event";
+
+        if (!filteredData || filteredData.length === 0) {
+          document.getElementById("noDataMessage").style.display = "block";
+          filteredData = [
+            {
+              snapshot_time: new Date(),
+              prices: { A: 0, B: 0, C: 0 },
+            },
+          ];
+        } else {
+          document.getElementById("noDataMessage").style.display = "none";
+        }
+
+        const labels = filteredData.map(
+          (entry) => new Date(entry.snapshot_time)
+        );
+        const keys = Object.keys(filteredData[0].prices || {});
+        const colors = ["green", "red", "blue", "orange", "purple"];
+
+        const datasets = keys.map((key, i) => ({
+          label: key,
+          data: filteredData.map((entry) => entry.prices[key]),
+          fill: false,
+          borderColor: colors[i % colors.length],
+          tension: 0.2,
+        }));
+
+        if (chart) chart.destroy(); // destroy previous chart
+
+        chart = new Chart(document.getElementById("priceChart"), {
+          type: "line",
+          data: {
+            labels,
+            datasets,
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                type: "time",
+                time: {
+                  tooltipFormat: "MMM d, h:mm a",
+                  unit: "hour",
+                },
+                title: {
+                  display: true,
+                  text: "Time",
+                },
+              },
+              y: {
+                beginAtZero: true,
+                max: 1,
+                title: {
+                  display: true,
+                  text: "Price (Probability)",
+                },
+              },
+            },
+            plugins: {
+              legend: { position: "top" },
+              tooltip: { mode: "index", intersect: false },
+            },
+          },
+        });
+      }
+
+      function filterData(range) {
+        if (range === "ALL") return originalData;
+
+        const now = new Date();
+        const from = new Date(now.getTime() - rangeMap[range]);
+        return originalData.filter(
+          (entry) => new Date(entry.snapshot_time) >= from
+        );
+      }
+
+      function setupFilters(title) {
+        const buttons = document.querySelectorAll(".filter-btn");
+        buttons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            buttons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            const range = btn.getAttribute("data-range");
+            const filtered = filterData(range);
+            renderChart(title, filtered);
+          });
+        });
+      }
+
+      async function init() {
+        const params = new URLSearchParams(window.location.search);
+        const eventId = params.get("event_id");
+        if (!eventId) {
+          alert("Missing event_id in URL!");
+          return;
+        }
+
+        try {
+          const json = await fetchData(eventId);
+          originalData = json.data || [];
+          renderChart(json.title, originalData);
+          setupFilters(json.title);
+        } catch (err) {
+          console.error("Failed to load data:", err);
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

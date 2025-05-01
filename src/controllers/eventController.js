@@ -62,6 +62,12 @@ async function buyEvent(req, res) {
 
     const marketAfter = calculateMarketPrices(newShares, b_constant);
 
+    await pool.query(
+      `INSERT INTO price_snapshots (event_id, prices)
+       VALUES ($1, $2)`,
+      [event_id, marketAfter]
+    );
+
     await client.query("COMMIT");
 
     console.log(`[BUY] ${user_id} bought ${shares} shares of ${choice}`);
@@ -132,6 +138,12 @@ async function sellEvent(req, res) {
 
     const marketAfter = calculateMarketPrices(newShares, b_constant);
 
+    await pool.query(
+      `INSERT INTO price_snapshots (event_id, prices)
+       VALUES ($1, $2)`,
+      [event_id, marketAfter]
+    );
+
     await client.query("COMMIT");
 
     console.log(`[SELL] ${user_id} sold ${shares} shares of ${choice}`);
@@ -154,5 +166,33 @@ async function sellEvent(req, res) {
     res.status(500).json({ ok: false, message: error.message });
   } finally {
     client.release();
+  }
+}
+
+export async function getPriceData(req, res) {
+  const { event_id } = req.params;
+  try {
+    const { rows } = await pool.query(
+      `SELECT snapshot_time, prices
+       FROM price_snapshots
+       WHERE event_id = $1
+       ORDER BY snapshot_time ASC`,
+      [event_id]
+    );
+
+    const eventRes = await pool.query(
+      `SELECT event_title
+       FROM events_data
+       WHERE event_id = $1`,
+      [event_id]
+    );
+    const event = eventRes.rows[0];
+
+    res.json({ title: event.event_title, data: rows });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ ok: false, message: "Failed to fetch price history" });
   }
 }
