@@ -7,26 +7,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
         margin: 2rem;
         background: #f9f9f9;
+        position: relative;
       }
-      canvas {
-        max-width: 100%;
-      }
-      #chartTitle {
-        text-align: center;
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-      }
-      #customLegend {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 10px;
+      #refreshButton {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 6px 12px;
+        background-color: #3062f7;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
       }
       #filterButtons {
         text-align: center;
@@ -45,25 +44,48 @@
         background-color: #3062f7;
         color: white;
       }
+      #customLegend {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+        font-weight: bold;
+      }
+      canvas {
+        max-width: 100%;
+      }
+      #chartTitle {
+        text-align: center;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+      #noDataMessage {
+        text-align: center;
+        color: red;
+        font-weight: bold;
+        margin-top: 2rem;
+      }
       #loadingSpinner {
-        display: none;
         text-align: center;
         margin-top: 10px;
+        display: none;
       }
       #loadingSpinner div {
-        display: inline-block;
         width: 24px;
         height: 24px;
         border: 3px solid #ccc;
         border-top: 3px solid #3062f7;
         border-radius: 50%;
         animation: spin 1s linear infinite;
+        margin: auto;
       }
       @keyframes spin {
-        0% {
+        from {
           transform: rotate(0deg);
         }
-        100% {
+        to {
           transform: rotate(360deg);
         }
       }
@@ -73,23 +95,11 @@
         color: #555;
         margin-top: 5px;
       }
-      #refreshButton {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        padding: 6px 12px;
-        background-color: #3062f7;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-      }
     </style>
   </head>
   <body>
-    <h2 id="chartTitle">Loading event title...</h2>
     <button id="refreshButton">Refresh</button>
+    <h2 id="chartTitle">Loading event title...</h2>
     <div id="customLegend"></div>
     <div id="filterButtons">
       <button class="filter-btn" data-range="5M">5M</button>
@@ -104,13 +114,15 @@
     </div>
     <canvas id="priceChart" height="100"></canvas>
     <div id="loadingSpinner"><div></div></div>
-    <p id="noDataMessage">No price data yet for this event.</p>
+    <p id="noDataMessage" style="display: none">
+      No price data yet for this event.
+    </p>
     <div id="lastUpdated">Last updated: --</div>
     <script>
+      Chart.register(ChartDataLabels, ChartZoom);
       let originalData = [];
       let chart;
       let eventId = null;
-
       const rangeMap = {
         "5M": 5 * 60 * 1000,
         "15M": 15 * 60 * 1000,
@@ -121,49 +133,37 @@
         "1W": 7 * 24 * 60 * 60 * 1000,
         "1M": 30 * 24 * 60 * 60 * 1000,
       };
-
-      async function fetchData(eventId) {
-        const response = await fetch(`/api/events/${eventId}/prices`);
-        return await response.json();
+      async function fetchData(id) {
+        const res = await fetch(`/api/events/${id}/prices`);
+        return res.json();
       }
-
       function updateLatestPriceMarkers(latest, colors) {
         const container = document.getElementById("customLegend");
         container.innerHTML = "";
         if (!latest || !latest.prices) return;
         Object.entries(latest.prices).forEach(([key, val], i) => {
-          const div = document.createElement("div");
-          div.style.display = "flex";
-          div.style.alignItems = "center";
-          div.style.fontWeight = "bold";
-          div.style.fontSize = "1.1rem";
           const dot = document.createElement("span");
           Object.assign(dot.style, {
             display: "inline-block",
             width: "10px",
             height: "10px",
             borderRadius: "50%",
-            marginRight: "6px",
+            margin: "0 6px 0 0",
             backgroundColor: colors[i % colors.length],
           });
-          const lbl = document.createElement("span");
-          lbl.textContent = `${key} ${(val * 100).toFixed(1)}%`;
-          div.append(dot, lbl);
-          container.append(div);
+          const label = document.createElement("span");
+          label.textContent = `${key} ${(val * 100).toFixed(1)}%`;
+          container.append(dot, label);
         });
       }
-
       function updateTimestamp() {
-        const now = new Date();
         document.getElementById("lastUpdated").textContent =
-          "Last updated: " + now.toLocaleTimeString();
+          "Last updated: " + new Date().toLocaleTimeString();
       }
-
       function renderChart(title, data) {
-        document.getElementById("chartTitle").textContent =
-          title || "Untitled Event";
+        document.getElementById("chartTitle").textContent = title || "Untitled";
         const colors = ["#007bff", "#dc3545", "#6f42c1", "#28a745", "#ffc107"];
-        let hasData = Array.isArray(data) && data.length > 0;
+        const hasData = Array.isArray(data) && data.length > 0;
         if (!hasData) {
           document.getElementById("noDataMessage").style.display = "block";
           data = [{ snapshot_time: new Date(), prices: { A: 0, B: 0, C: 0 } }];
@@ -177,7 +177,8 @@
           borderColor: colors[i % colors.length],
           fill: false,
           tension: 0.2,
-          pointRadius: 4,
+          pointRadius: 0,
+          pointHoverRadius: 0,
         }));
         if (chart) chart.destroy();
         chart = new Chart(document.getElementById("priceChart"), {
@@ -207,6 +208,14 @@
                 font: { weight: "bold", size: 12 },
                 color: (ctx) => ctx.dataset.borderColor,
               },
+              zoom: {
+                zoom: {
+                  wheel: { enabled: true },
+                  pinch: { enabled: true },
+                  mode: "x",
+                },
+                pan: { enabled: true, mode: "x", threshold: 10 },
+              },
             },
             scales: {
               x: { type: "time", time: { tooltipFormat: "MMM d, h:mm a" } },
@@ -216,15 +225,15 @@
           plugins: [ChartDataLabels],
         });
       }
-
       function filterData(range) {
-        if (range === "ALL") return originalData;
-        const now = Date.now();
-        return originalData.filter(
-          (d) => new Date(d.snapshot_time).getTime() >= now - rangeMap[range]
-        );
+        return range === "ALL"
+          ? originalData
+          : originalData.filter(
+              (d) =>
+                new Date(d.snapshot_time).getTime() >=
+                Date.now() - rangeMap[range]
+            );
       }
-
       function setupFilters() {
         const btns = document.querySelectorAll(".filter-btn");
         const saved = localStorage.getItem("lastFilterRange") || "ALL";
@@ -247,7 +256,6 @@
           })
         );
       }
-
       async function loadAndRender() {
         document.getElementById("loadingSpinner").style.display = "block";
         try {
@@ -263,7 +271,6 @@
         }
         document.getElementById("loadingSpinner").style.display = "none";
       }
-
       function init() {
         const params = new URLSearchParams(location.search);
         eventId = params.get("event_id");
