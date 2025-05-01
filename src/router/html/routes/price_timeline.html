@@ -6,6 +6,7 @@
     <title>Prediction Market Chart</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -26,14 +27,6 @@
         flex-wrap: wrap;
         gap: 15px;
         margin-bottom: 10px;
-      }
-      #noDataMessage {
-        display: none;
-        color: red;
-        font-weight: bold;
-        font-size: 1rem;
-        text-align: center;
-        margin-top: 2rem;
       }
       #filterButtons {
         text-align: center;
@@ -74,10 +67,29 @@
           transform: rotate(360deg);
         }
       }
+      #lastUpdated {
+        text-align: right;
+        font-size: 0.9rem;
+        color: #555;
+        margin-top: 5px;
+      }
+      #refreshButton {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 6px 12px;
+        background-color: #3062f7;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
     <h2 id="chartTitle">Loading event title...</h2>
+    <button id="refreshButton">Refresh</button>
     <div id="customLegend"></div>
     <div id="filterButtons">
       <button class="filter-btn" data-range="5M">5M</button>
@@ -92,13 +104,8 @@
     </div>
     <canvas id="priceChart" height="100"></canvas>
     <div id="loadingSpinner"><div></div></div>
-    <div
-      id="lastUpdated"
-      style="text-align: right; font-size: 0.9rem; color: #555; margin-top: 5px"
-    >
-      Last updated: --
-    </div>
     <p id="noDataMessage">No price data yet for this event.</p>
+    <div id="lastUpdated">Last updated: --</div>
     <script>
       let originalData = [];
       let chart;
@@ -120,58 +127,57 @@
         return await response.json();
       }
 
-      function updateLatestPriceMarkers(latestSnapshot, colors) {
+      function updateLatestPriceMarkers(latest, colors) {
         const container = document.getElementById("customLegend");
         container.innerHTML = "";
-        if (!latestSnapshot || !latestSnapshot.prices) return;
-        Object.entries(latestSnapshot.prices).forEach(([key, value], i) => {
-          const wrapper = document.createElement("div");
-          wrapper.style.display = "flex";
-          wrapper.style.alignItems = "center";
-          wrapper.style.fontWeight = "bold";
-          wrapper.style.fontSize = "0.95rem";
-          wrapper.style.color = "#333";
+        if (!latest || !latest.prices) return;
+        Object.entries(latest.prices).forEach(([key, val], i) => {
+          const div = document.createElement("div");
+          div.style.display = "flex";
+          div.style.alignItems = "center";
+          div.style.fontWeight = "bold";
+          div.style.fontSize = "1.1rem";
           const dot = document.createElement("span");
-          dot.style.display = "inline-block";
-          dot.style.width = "10px";
-          dot.style.height = "10px";
-          dot.style.borderRadius = "50%";
-          dot.style.marginRight = "6px";
-          dot.style.backgroundColor = colors[i % colors.length];
-          const label = document.createElement("span");
-          label.textContent = `${key} ${(value * 100).toFixed(1)}%`;
-          wrapper.appendChild(dot);
-          wrapper.appendChild(label);
-          container.appendChild(wrapper);
+          Object.assign(dot.style, {
+            display: "inline-block",
+            width: "10px",
+            height: "10px",
+            borderRadius: "50%",
+            marginRight: "6px",
+            backgroundColor: colors[i % colors.length],
+          });
+          const lbl = document.createElement("span");
+          lbl.textContent = `${key} ${(val * 100).toFixed(1)}%`;
+          div.append(dot, lbl);
+          container.append(div);
         });
       }
 
-      function renderChart(title, filteredData) {
+      function updateTimestamp() {
+        const now = new Date();
+        document.getElementById("lastUpdated").textContent =
+          "Last updated: " + now.toLocaleTimeString();
+      }
+
+      function renderChart(title, data) {
         document.getElementById("chartTitle").textContent =
           title || "Untitled Event";
         const colors = ["#007bff", "#dc3545", "#6f42c1", "#28a745", "#ffc107"];
-        let hasRealData = false;
-        if (!filteredData || filteredData.length === 0) {
+        let hasData = Array.isArray(data) && data.length > 0;
+        if (!hasData) {
           document.getElementById("noDataMessage").style.display = "block";
-          filteredData = [
-            { snapshot_time: new Date(), prices: { A: 0, B: 0, C: 0 } },
-          ];
-        } else {
-          document.getElementById("noDataMessage").style.display = "none";
-          hasRealData = true;
-        }
-        updateLatestPriceMarkers(filteredData[filteredData.length - 1], colors);
-        const labels = filteredData.map(
-          (entry) => new Date(entry.snapshot_time)
-        );
-        const keys = Object.keys(filteredData[0].prices || {});
-        const datasets = keys.map((key, i) => ({
-          label: key,
-          data: filteredData.map((entry) => entry.prices[key]),
-          fill: false,
+          data = [{ snapshot_time: new Date(), prices: { A: 0, B: 0, C: 0 } }];
+        } else document.getElementById("noDataMessage").style.display = "none";
+        updateLatestPriceMarkers(data[data.length - 1], colors);
+        const labels = data.map((d) => new Date(d.snapshot_time));
+        const keys = Object.keys(data[0].prices);
+        const datasets = keys.map((k, i) => ({
+          label: k,
+          data: data.map((d) => d.prices[k]),
           borderColor: colors[i % colors.length],
+          fill: false,
           tension: 0.2,
-          pointRadius: 2,
+          pointRadius: 4,
         }));
         if (chart) chart.destroy();
         chart = new Chart(document.getElementById("priceChart"), {
@@ -179,127 +185,95 @@
           data: { labels, datasets },
           options: {
             responsive: true,
-            animation: hasRealData
-              ? { duration: 1000, easing: "easeOutElastic" }
-              : false,
-            animations: {
-              y: { duration: 800, easing: "easeOutBack" },
-              radius: { duration: 400, easing: "easeOutBounce" },
-            },
-            elements: { point: { radius: 3 } },
-            scales: {
-              x: {
-                type: "time",
-                time: { tooltipFormat: "MMM d, h:mm a", unit: "hour" },
-                title: { display: true, text: "Time" },
-              },
-              y: {
-                beginAtZero: true,
-                max: 1,
-                title: { display: true, text: "Price (Probability)" },
-              },
-            },
+            layout: { padding: { right: 50 } },
+            interaction: { mode: "nearest", axis: "xy", intersect: true },
             plugins: {
               legend: { display: false },
               tooltip: {
                 mode: "nearest",
-                intersect: false,
-                axis: "x",
+                intersect: true,
                 callbacks: {
-                  label: function (context) {
-                    const label = context.dataset.label || "";
-                    const value = context.raw;
-                    return `${label}: ${(value * 100).toFixed(1)}%`;
-                  },
+                  label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}`,
                 },
               },
+              datalabels: {
+                display: true,
+                align: "top",
+                anchor: "end",
+                formatter: (val, ctx) => {
+                  const ds = ctx.chart.data.datasets[ctx.datasetIndex];
+                  return ctx.dataIndex === ds.data.length - 1 ? val : null;
+                },
+                font: { weight: "bold", size: 12 },
+                color: (ctx) => ctx.dataset.borderColor,
+              },
+            },
+            scales: {
+              x: { type: "time", time: { tooltipFormat: "MMM d, h:mm a" } },
+              y: { beginAtZero: true, title: { display: true, text: "Price" } },
             },
           },
+          plugins: [ChartDataLabels],
         });
       }
 
       function filterData(range) {
         if (range === "ALL") return originalData;
-        const now = new Date();
-        const from = new Date(now.getTime() - rangeMap[range]);
+        const now = Date.now();
         return originalData.filter(
-          (entry) => new Date(entry.snapshot_time) >= from
+          (d) => new Date(d.snapshot_time).getTime() >= now - rangeMap[range]
         );
       }
 
       function setupFilters() {
-        const buttons = document.querySelectorAll(".filter-btn");
-        const savedRange = localStorage.getItem("lastFilterRange") || "ALL";
-        buttons.forEach((b) => {
-          if (b.getAttribute("data-range") === savedRange)
-            b.classList.add("active");
-          else b.classList.remove("active");
-        });
+        const btns = document.querySelectorAll(".filter-btn");
+        const saved = localStorage.getItem("lastFilterRange") || "ALL";
+        btns.forEach((b) =>
+          b.classList.toggle("active", b.dataset.range === saved)
+        );
         renderChart(
           document.getElementById("chartTitle").textContent,
-          filterData(savedRange)
+          filterData(saved)
         );
-        buttons.forEach((btn) => {
-          btn.addEventListener("click", () => {
-            buttons.forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-            const range = btn.getAttribute("data-range");
-            localStorage.setItem("lastFilterRange", range);
+        btns.forEach((b) =>
+          b.addEventListener("click", () => {
+            btns.forEach((x) => x.classList.remove("active"));
+            b.classList.add("active");
+            localStorage.setItem("lastFilterRange", b.dataset.range);
             renderChart(
               document.getElementById("chartTitle").textContent,
-              filterData(range)
+              filterData(b.dataset.range)
             );
-          });
-        });
-      }
-
-      function getCurrentRange() {
-        return localStorage.getItem("lastFilterRange") || "ALL";
+          })
+        );
       }
 
       async function loadAndRender() {
+        document.getElementById("loadingSpinner").style.display = "block";
         try {
-          document.getElementById("loadingSpinner").style.display = "block";
           const json = await fetchData(eventId);
           originalData = json.data || [];
-          renderChart(json.title, filterData(getCurrentRange()));
+          renderChart(
+            json.title,
+            filterData(localStorage.getItem("lastFilterRange") || "ALL")
+          );
           updateTimestamp();
-        } catch (err) {
-          console.error("Failed to load data:", err);
-        } finally {
-          document.getElementById("loadingSpinner").style.display = "none";
+        } catch (e) {
+          console.error(e);
         }
-      }
-
-      function updateTimestamp() {
-        const now = new Date();
-        const formatted = now.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        });
-        document.getElementById(
-          "lastUpdated"
-        ).textContent = `Last updated: ${formatted}`;
+        document.getElementById("loadingSpinner").style.display = "none";
       }
 
       function init() {
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(location.search);
         eventId = params.get("event_id");
-        if (!eventId) return alert("Missing event_id in URL!");
-        loadAndRender();
+        if (!eventId) return alert("Missing event_id");
         setupFilters();
-        setInterval(() => {
-          const activeRange = getCurrentRange();
-          loadAndRender().then(() => {
-            renderChart(
-              document.getElementById("chartTitle").textContent,
-              filterData(activeRange)
-            );
-          });
-        }, 10000);
+        loadAndRender();
+        document
+          .getElementById("refreshButton")
+          .addEventListener("click", loadAndRender);
       }
-
       init();
     </script>
   </body>
