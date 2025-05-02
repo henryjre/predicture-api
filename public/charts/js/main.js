@@ -1,18 +1,22 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// 1. Formatter & Chart.js Setup
+// ──────────────────────────────────────────────────────────────────────────────
 const formatter = new Intl.NumberFormat("en-PH", {
   style: "currency",
   currency: "PHP",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
-
 Chart.register(ChartDataLabels);
 
+// ──────────────────────────────────────────────────────────────────────────────
+// 2. State & Utilities
+// ──────────────────────────────────────────────────────────────────────────────
 let originalData = [];
-let chart;
+let chart = null;
 let eventId = null;
 
 const rangeMap = {
-  "1m": 1 * 60 * 1000,
   "5M": 5 * 60 * 1000,
   "15M": 15 * 60 * 1000,
   "30M": 30 * 60 * 1000,
@@ -29,26 +33,22 @@ async function fetchData(id) {
   return res.json();
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// 3. Chart & Legend Rendering
+// ──────────────────────────────────────────────────────────────────────────────
 function updateLatestPriceMarkers(latest, colors) {
   const container = document.getElementById("customLegend");
   container.innerHTML = "";
   if (!latest?.prices) return;
 
   Object.entries(latest.prices).forEach(([key, val], i) => {
-    // 1) Create wrapper
     const item = document.createElement("div");
     item.classList.add("legend-item");
-
-    // 2) Create dot
     const dot = document.createElement("span");
     dot.classList.add("legend-dot");
     dot.style.backgroundColor = colors[i % colors.length];
-
-    // 3) Create label
     const label = document.createElement("span");
     label.textContent = `${key} ${(val * 100).toFixed(1)}%`;
-
-    // 4) Assemble and append
     item.append(dot, label);
     container.append(item);
   });
@@ -62,9 +62,7 @@ function updateTimestamp() {
 function renderChart(title, data) {
   document.getElementById("chartTitle").textContent = title || "Untitled";
   const colors = ["#007bff", "#dc3545", "#6f42c1", "#28a745", "#ffc107"];
-  const hasData = Array.isArray(data) && data.length > 0;
-
-  if (!hasData) {
+  if (!Array.isArray(data) || data.length === 0) {
     document.getElementById("noDataMessage").style.display = "block";
     data = [{ snapshot_time: new Date(), prices: { A: 0, B: 0, C: 0 } }];
   } else {
@@ -119,20 +117,12 @@ function renderChart(title, data) {
         x: {
           type: "time",
           time: { tooltipFormat: "MMM d, h:mm a" },
-          ticks: {
-            font: {
-              size: 10, // <- makes the bottom (time) tick labels smaller
-            },
-          },
+          ticks: { font: { size: 10 } },
         },
         y: {
           beginAtZero: true,
           title: { display: true, text: "Price" },
-          ticks: {
-            font: {
-              size: 10, // <- makes the left-side (price) tick labels smaller
-            },
-          },
+          ticks: { font: { size: 10 } },
         },
       },
     },
@@ -140,6 +130,9 @@ function renderChart(title, data) {
   });
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// 4. Filters
+// ──────────────────────────────────────────────────────────────────────────────
 function filterData(range) {
   return range === "ALL"
     ? originalData
@@ -170,19 +163,38 @@ function setupFilters() {
   );
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// 5. Carousel Init
+// ──────────────────────────────────────────────────────────────────────────────
+let swiperInstance = null;
+
+function initSwiper() {
+  if (swiperInstance) {
+    swiperInstance.destroy(true, true);
+  }
+  swiperInstance = new Swiper(".mySwiper", {
+    slidesPerView: "auto",
+    centeredSlides: true,
+    centerInsufficientSlides: true,
+    spaceBetween: 16,
+    initialSlide: 0,
+    breakpoints: {
+      769: { centeredSlides: false },
+    },
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 6. Data Loading & App Initialization
+// ──────────────────────────────────────────────────────────────────────────────
 async function loadAndRender() {
   document.getElementById("loadingSpinner").style.display = "block";
   try {
     const json = await fetchData(eventId);
     originalData = json.data || [];
 
-    if (json.rewards_pool) {
-      const totalRewards = formatter.format(json.rewards_pool);
-
-      document.getElementById("rewardsDisplay").textContent = totalRewards;
-    }
-
-    const totalVolume = json.data.reduce(
+    // Volume
+    const totalVolume = originalData.reduce(
       (sum, { raw_cost }) => sum + parseFloat(raw_cost),
       0
     );
@@ -190,47 +202,74 @@ async function loadAndRender() {
       totalVolume
     )} Vol`;
 
-    document.getElementById("endDateDisplay").textContent = json.end_date;
+    // Rewards & End Date
+    document.getElementById("rewardsDisplay").textContent = formatter.format(
+      json.rewards_pool || 0
+    );
+    document.getElementById("endDateDisplay").textContent =
+      json.end_date || "—";
 
+    // Chart
     renderChart(
       json.title,
       filterData(localStorage.getItem("lastFilterRange") || "ALL")
     );
     updateTimestamp();
+
+    // Carousel Slides
+    const carousel = document.getElementById("cardCarousel");
+    carousel.innerHTML = "";
+    if (json.shares_data && json.rewards_pool) {
+      Object.entries(json.shares_data).forEach(([choice, shares]) => {
+        const ratio = json.rewards_pool / shares;
+        const slide = document.createElement("div");
+        slide.classList.add("swiper-slide", "choice-card");
+        slide.innerHTML = `
+          <div style="text-align:center">
+            <div class="choice-label">${choice}</div>
+            <div class="choice-value" style="font-size:1.5rem;font-weight:bold">
+              ${formatter.format(ratio)}
+            </div>
+            <div class="choice-desc">per share holdings</div>
+            <button class="choice-btn">Buy Shares</button>
+          </div>`;
+        carousel.append(slide);
+      });
+      initSwiper();
+    }
   } catch (e) {
     console.error(e);
+  } finally {
+    document.getElementById("loadingSpinner").style.display = "none";
   }
-  document.getElementById("loadingSpinner").style.display = "none";
+}
+
+function updateFades() {
+  const wrapper = document.getElementById("filterWrapper");
+  const scroller = document.getElementById("filterButtons");
+  const { scrollLeft, scrollWidth, clientWidth } = scroller;
+  wrapper.classList.toggle("hide-fade-left", scrollLeft <= 0);
+  wrapper.classList.toggle(
+    "hide-fade-right",
+    scrollLeft + clientWidth >= scrollWidth - 1
+  );
 }
 
 function init() {
   const params = new URLSearchParams(location.search);
   eventId = params.get("event_id");
   if (!eventId) return alert("Missing event_id");
+
   setupFilters();
   loadAndRender();
-
   setInterval(loadAndRender, 30000);
+
+  const scroller = document.getElementById("filterButtons");
+  scroller.addEventListener("scroll", updateFades);
+  window.addEventListener("resize", updateFades);
+  updateFades();
 }
 
-const wrapper = document.getElementById("filterWrapper");
-const scroller = document.getElementById("filterButtons");
-
-function updateFades() {
-  const { scrollLeft, scrollWidth, clientWidth } = scroller;
-  // hide left fade if scrolled all the way left
-  wrapper.classList.toggle("hide-fade-left", scrollLeft <= 0);
-  // hide right fade if scrolled to (or past) the end
-  wrapper.classList.toggle(
-    "hide-fade-right",
-    scrollLeft + clientWidth >= scrollWidth - 1 /* fudge for rounding */
-  );
-}
-
-// wire it up
-scroller.addEventListener("scroll", updateFades);
-window.addEventListener("resize", updateFades);
-// initial check
-updateFades();
-
-init();
+document.addEventListener("DOMContentLoaded", () => {
+  init();
+});

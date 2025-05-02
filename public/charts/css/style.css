@@ -1,65 +1,27 @@
-/* Color Palette */
+/* ──────────────────────────────────────────────────────────────────────────────
+   1. VARIABLES & RESET
+──────────────────────────────────────────────────────────────────────────────── */
 :root {
   --light-blue: #d8efff;
   --regular-blue: #3062f7;
   --dark-blue: #001b70;
-  --dark-blue-rgb: 0, 27, 112;
   --dark-blue-light: #1a2a80;
 }
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
 body {
-  margin: 0;
-  padding: 0;
   font-family: "Poppins", sans-serif;
   background: var(--light-blue);
   color: var(--dark-blue);
   position: relative;
 }
 
-.header-container {
-  width: 100%;
-  margin: 0 2rem;
-  padding: 0 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.container {
-  margin: 1.5rem 2rem;
-  padding: 0 1.5rem;
-}
-
-/* Logo styling */
-.logo {
-  height: 28px;
-  width: auto;
-}
-
-/* Button styling */
-.trade-btn {
-  background-color: white;
-  color: var(--dark-blue);
-  border: none;
-  border-radius: 6px;
-  padding: 5px 10px;
-  font-size: 0.9rem;
-  font-weight: bold;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-.trade-btn:hover {
-  background-color: var(--light-blue); /* darker shade on hover */
-}
-
-/* When scrolled – toggle this via JS */
+/* ──────────────────────────────────────────────────────────────────────────────
+   2. HEADER
+──────────────────────────────────────────────────────────────────────────────── */
 #stickyHeader {
   position: sticky;
   top: 0;
@@ -74,6 +36,67 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
+.header-container {
+  width: 100%;
+  margin: 0 2rem;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    margin: 0 0rem;
+    padding: 0 0rem;
+  }
+}
+
+.logo {
+  height: 28px;
+  width: auto;
+}
+
+.trade-btn {
+  background-color: white;
+  color: var(--dark-blue);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.trade-btn:hover {
+  background-color: var(--light-blue); /* darker shade on hover */
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   3. CHART & LEGEND
+──────────────────────────────────────────────────────────────────────────────── */
+
+.container {
+  margin: 1.5rem 2rem;
+  padding: 0 1.5rem;
+
+  @media (max-width: 768px) {
+    margin: 0.8rem 0.5rem;
+    padding: 0 0.5rem;
+  }
+}
+
+#chartTitle {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    text-align: left;
+  }
+}
+
 #volumeUnderTitle {
   justify-content: center;
   margin-top: -0.3rem; /* tighter to the title */
@@ -81,6 +104,10 @@ body {
   font-size: 0.85rem; /* smaller font */
   color: rgba(255, 255, 255, 0.85); /* soft white */
   font-weight: 500;
+
+  @media (max-width: 768px) {
+    justify-content: left;
+  }
 }
 
 /* Icon color override */
@@ -91,70 +118,104 @@ body {
   padding: 0;
 }
 
-/* container holds two rows vertically */
-#infoContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem; /* space between the two rows */
-  margin: 0 1rem;
-  font-size: 0.9rem;
-  font-weight: bold;
+.chart-container {
+  position: relative;
+  overflow: hidden;
 }
 
-/* each row: left+right spaced apart */
-.info-row {
+canvas {
+  display: block;
+  /* override body margins to fill full viewport width */
+  width: calc(100% + 1rem) !important;
+  margin: 0 0rem !important;
+  max-width: none;
+  padding: 0;
+
+  @media (max-width: 768px) {
+    width: calc(100% + 1rem) !important;
+    margin: 0 -0.3rem !important;
+  }
+}
+
+#priceChart {
+  height: 25rem !important;
+
+  @media (max-width: 768px) {
+    height: 13rem !important;
+  }
+}
+
+#loadingSpinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  z-index: 10;
+}
+
+#loadingSpinner div {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #ccc;
+  border-top: 3px solid #3062f7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#customLegend {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px; /* space between items */
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 400;
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+    font-size: 0.7rem;
+    gap: 10px;
+  }
+}
+
+.legend-item {
+  display: flex;
   align-items: center;
 }
 
-/* left side: icon next to label */
-.info-left {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 8px;
+    height: 8px;
+  }
 }
 
-/* icon sizing */
-.info-icon {
-  display: inline-flex;
-  width: 1.2em;
-  height: 1.2em;
-}
-.info-icon svg {
-  width: 100%;
-  height: 100%;
-  stroke: var(--dark-blue); /* or whatever color */
-}
-
-/* text styling */
-.info-label,
-.info-value {
-  margin: 0;
-  color: var(--dark-blue);
-  white-space: nowrap; /* prevent wrap */
-}
+/* ──────────────────────────────────────────────────────────────────────────────
+   4. FILTERS
+──────────────────────────────────────────────────────────────────────────────── */
 
 #filterWrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 1rem 0;
-}
-
-#refreshButton {
-  padding: 6px 12px;
-  background-color: var(--dark-blue);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  display: inline-block;
-  margin: 0;
-}
-
-#filterWrapper {
   position: relative;
   overflow: hidden;
 }
@@ -167,6 +228,25 @@ body {
   scroll-snap-type: x mandatory;
   gap: 0.5rem;
   padding-top: 1rem;
+  scrollbar-width: none;
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+  }
+}
+
+#filterButtons::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  #filterButtons .filter-btn:first-child {
+    margin-left: 1rem;
+  }
+  /* …and the very last button in 1rem */
+  #filterButtons .filter-btn:last-child {
+    margin-right: 1rem;
+  }
 }
 
 #filterWrapper::before {
@@ -200,13 +280,6 @@ body {
   opacity: 0;
 }
 
-#filterButtons::-webkit-scrollbar {
-  display: none;
-}
-#filterButtons {
-  scrollbar-width: none; /* Firefox */
-}
-
 .filter-btn {
   font-family: inherit;
   border: none;
@@ -221,6 +294,11 @@ body {
   transition: background-color 0.2s ease, transform 0.1s ease;
   flex: 0 0 auto;
   scroll-snap-align: start;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding: 8px 16px;
+  }
 }
 
 /* Hover effect */
@@ -234,46 +312,47 @@ body {
   color: var(--light-blue);
 }
 
-#customLegend {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 15px; /* space between items */
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-  font-weight: 400;
-}
+/* ──────────────────────────────────────────────────────────────────────────────
+   5. INFO ROWS (Volume, Rewards, End Date)
+──────────────────────────────────────────────────────────────────────────────── */
 
-.legend-item {
+.info-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.legend-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 6px; /* space between dot & text */
-  flex-shrink: 0; /* keep dot from shrinking */
+.info-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-canvas {
-  display: block;
-  /* override body margins to fill full viewport width */
-  width: calc(100% + 1rem) !important;
-  margin: 0 0rem !important;
-  max-width: none;
-  padding: 0;
+.info-icon {
+  display: inline-flex;
+  width: 1.2em;
+  height: 1.2em;
+}
+.info-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: var(--dark-blue);
 }
 
-#priceChart {
-  height: 25rem !important;
+#infoContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0 1rem;
+  font-size: 0.9rem;
+  font-weight: bold;
 }
 
-#chartTitle {
-  text-align: center;
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+.info-label,
+.info-value {
+  margin: 0;
+  color: var(--dark-blue);
+  white-space: nowrap;
 }
 
 #noDataMessage {
@@ -294,40 +373,6 @@ canvas {
   min-height: 3rem; /* match desktop chart height */
 }
 
-.chart-container {
-  position: relative;
-  /* Optional: match your canvas width if needed */
-  overflow: hidden;
-}
-
-#loadingSpinner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: none; /* still controlled by your JS */
-  z-index: 10; /* above the canvas */
-}
-
-#loadingSpinner div {
-  width: 24px;
-  height: 24px;
-  border: 3px solid #ccc;
-  border-top: 3px solid #3062f7;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: auto;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 #lastUpdated {
   text-align: center;
   font-size: 0.7rem;
@@ -335,96 +380,130 @@ canvas {
   margin-top: 5px;
   margin-left: 1rem;
   margin-right: 1rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.5rem;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   6. EPS TITLE
+──────────────────────────────────────────────────────────────────────────────── */
+
+#epsTitle {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.3em;
+  margin-top: 2rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   7. SWIPER CAROUSEL
+──────────────────────────────────────────────────────────────────────────────── */
+
+.swiper {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+  overflow: visible;
+  position: relative;
+}
+
+.swiper::before,
+.swiper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2rem;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.swiper::before {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    var(--light-blue) 0%,
+    rgba(216, 239, 255, 0) 100%
+  );
+}
+
+.swiper::after {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    var(--light-blue) 0%,
+    rgba(216, 239, 255, 0) 100%
+  );
+}
+
+.swiper-wrapper {
+  display: inline-flex;
+  padding: 2rem 1rem;
+}
+
+.swiper-slide {
+  flex-shrink: 0;
+  width: auto;
+  max-width: 15rem;
+  margin: 0 0.5rem;
+  box-sizing: border-box;
+}
+
+.swiper-slide.swiper-slide-active .choice-card {
+  transform: scale(1.08) translateY(-8px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.choice-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem 0;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.choice-label {
+  margin: 0.8rem 0 0.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.choice-desc {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding-top: -20px;
+}
+.choice-btn {
+  margin: 0.8rem 0;
+  background-color: var(--regular-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.choice-btn:hover {
+  background-color: var(--dark-blue); /* darker shade on hover */
 }
 
 @media (max-width: 768px) {
-  .header-container {
-    width: 100%;
-    margin: 0 0rem;
-    padding: 0 0rem;
+  .swiper-slide.choice-card.swiper-slide-active {
+    transform: scale(1.08) translateY(-8px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
   }
+}
 
-  .container {
-    margin: 0.8rem 0.5rem;
-    padding: 0 0.5rem;
-  }
-
-  /* Title on mobile */
-  #chartTitle {
-    text-align: left;
-  }
-
-  #volumeUnderTitle {
-    justify-content: left;
-  }
-
-  /* Align legend with title and reduce size */
-  #customLegend {
-    justify-content: flex-start;
-    font-size: 0.7rem;
-    gap: 10px;
-  }
-  .legend-dot {
-    width: 8px;
-    height: 8px;
-  }
-
-  canvas {
-    width: calc(100% + 1rem) !important;
-    margin: 0 -0.3rem !important;
-  }
-
-  #lastUpdated {
-    font-size: 0.5rem;
-  }
-
-  #filterButtons {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    justify-content: flex-start;
-    gap: 0.5rem;
-    padding-top: 1rem; /* remove any padding if present */
-    scroll-snap-type: x mandatory;
-  }
-
-  .filter-btn {
-    flex: 0 0 auto; /* don’t let them shrink */
-    scroll-snap-align: start;
-    font-size: 0.8rem;
-    padding: 8px 16px;
-  }
-
-  /* push the very first button in 1rem… */
-  #filterButtons .filter-btn:first-child {
-    margin-left: 1rem;
-  }
-  /* …and the very last button in 1rem */
-  #filterButtons .filter-btn:last-child {
-    margin-right: 1rem;
-  }
-
-  #refreshButton {
-    padding: 3px 12px;
-    font-size: 0.6rem; /* slightly smaller text */
-  }
-
-  #priceChart {
-    height: 13rem !important;
-  }
-
-  .volume-endDate-display {
-    margin: 0;
-    padding: 0;
-    text-align: center;
-    font-size: 0.9rem;
-    color: var(--dark-blue);
-  }
-
-  #volumeContainer,
-  #endDateContainer {
-    margin-left: 1rem;
-    margin-right: 1rem;
+/* PC hover effect only */
+@media (min-width: 769px) {
+  .swiper-slide.choice-card:hover {
+    transform: scale(1.08) translateY(-8px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
   }
 }

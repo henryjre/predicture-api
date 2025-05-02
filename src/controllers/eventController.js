@@ -195,7 +195,7 @@ export async function getChartData(req, res) {
     );
 
     const eventRes = await pool.query(
-      `SELECT event_title, rewards_pool, to_char(end_date, 'Month DD, YYYY') AS formatted_date
+      `SELECT event_title, shares_data, rewards_pool, to_char(end_date, 'Month DD, YYYY') AS formatted_date
        FROM events_data
        WHERE event_id = $1`,
       [event_id]
@@ -205,6 +205,7 @@ export async function getChartData(req, res) {
     res.json({
       title: event.event_title,
       rewards_pool: event.rewards_pool,
+      shares_data: event.shares_data,
       end_date: event.formatted_date,
       data: rows,
     });

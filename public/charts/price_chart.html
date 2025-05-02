@@ -25,6 +25,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <!-- Swiper CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/swiper/swiper-bundle.min.css"
+    />
+
+    <!-- Swiper JS -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
   </head>
   <body>
     <header id="stickyHeader">
@@ -69,7 +78,6 @@
       </div>
       <div id="filterWrapper">
         <div id="filterButtons">
-          <button class="filter-btn" data-range="1m">1 min</button>
           <button class="filter-btn" data-range="5M">5 min</button>
           <button class="filter-btn" data-range="15M">15 min</button>
           <button class="filter-btn" data-range="30M">30 min</button>
@@ -141,9 +149,17 @@
           <span class="info-value" id="endDateDisplay">February 29, 2125</span>
         </div>
       </div>
+
+      <div id="epsTitle">Earnings Per Share (EPS)</div>
+
+      <!-- Swiper Carousel -->
+      <div class="swiper mySwiper">
+        <div class="swiper-wrapper" id="cardCarousel">
+          <!-- JS will inject slides here as `<div class="swiper-slide">…</div>` -->
+        </div>
+      </div>
     </main>
 
-    <!-- Your custom JS -->
-    <script src="js/main.js"></script>
+    <script src="js/main.js" defer></script>
   </body>
 </html>
