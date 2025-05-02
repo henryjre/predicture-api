@@ -70,10 +70,10 @@ async function buyEvent(req, res) {
 
     await client.query("COMMIT");
 
-    console.log(`[BUY] ${user_id} bought ${shares} shares of ${choice}`);
-    console.log(`Current Shares:`, newShares);
-    console.log(`Current Market:`, marketAfter);
-    ("------------------------------------------------------------");
+    // console.log(`[BUY] ${user_id} bought ${shares} shares of ${choice}`);
+    // console.log(`Current Shares:`, newShares);
+    // console.log(`Current Market:`, marketAfter);
+    // ("------------------------------------------------------------");
 
     res.status(200).json({
       rawCost,
