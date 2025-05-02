@@ -181,14 +181,19 @@ export async function getPriceData(req, res) {
     );
 
     const eventRes = await pool.query(
-      `SELECT event_title
+      `SELECT event_title, shares_data, to_char(end_date, 'Month DD, YYYY') AS formatted_date
        FROM events_data
        WHERE event_id = $1`,
       [event_id]
     );
     const event = eventRes.rows[0];
 
-    res.json({ title: event.event_title, data: rows });
+    res.json({
+      title: event.event_title,
+      shares_data: event.shares_data,
+      end_date: event.formatted_date,
+      data: rows,
+    });
   } catch (err) {
     console.error(err);
     res
