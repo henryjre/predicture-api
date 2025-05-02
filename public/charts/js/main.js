@@ -233,4 +233,14 @@ window.addEventListener("resize", updateFades);
 // initial check
 updateFades();
 
+// Make header background appear after scrolling
+window.addEventListener("scroll", () => {
+  const header = document.getElementById("stickyHeader");
+  if (window.scrollY > 10) {
+    header.classList.add("scrolled");
+  } else {
+    header.classList.remove("scrolled");
+  }
+});
+
 init();

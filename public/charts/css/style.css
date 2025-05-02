@@ -4,14 +4,86 @@
   --regular-blue: #3062f7;
   --dark-blue: #001b70;
   --dark-blue-rgb: 0, 27, 112;
+  --dark-blue-light: #1a2a80;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
+  margin: 0;
+  padding: 0;
   font-family: "Poppins", sans-serif;
-  margin: 2rem 1rem;
   background: var(--light-blue);
-  position: relative;
   color: var(--dark-blue);
+  position: relative;
+}
+
+.header-container {
+  width: 100%;
+  margin: 0 2rem;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.container {
+  margin: 1.5rem 2rem;
+  padding: 0 1.5rem;
+}
+
+/* Logo styling */
+.logo {
+  height: 28px;
+  width: auto;
+}
+
+/* Button styling */
+.trade-btn {
+  background-color: white;
+  color: var(--dark-blue);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.trade-btn:hover {
+  background-color: var(--light-blue); /* darker shade on hover */
+}
+
+/* When scrolled – toggle this via JS */
+#stickyHeader {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  background-color: var(--dark-blue);
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Transparent + blur when scrolled */
+#stickyHeader.scrolled {
+  background-color: rgba(
+    0,
+    27,
+    112,
+    0.4
+  ); /* transparent version of dark-blue */
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 #volumeUnderTitle {
@@ -278,6 +350,17 @@ canvas {
 }
 
 @media (max-width: 768px) {
+  .header-container {
+    width: 100%;
+    margin: 0 0rem;
+    padding: 0 0rem;
+  }
+
+  .container {
+    margin: 0.5rem 0.5rem;
+    padding: 0 0.5rem;
+  }
+
   /* Title on mobile */
   #chartTitle {
     text-align: left;
