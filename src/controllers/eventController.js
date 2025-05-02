@@ -56,8 +56,15 @@ async function buyEvent(req, res) {
 
     // Update the locked row with new shares
     await client.query(
-      "UPDATE events_data SET shares_data = $1 WHERE event_id = $2",
-      [newShares, event_id]
+      `
+        UPDATE events_data
+        SET 
+          shares_data   = $1,
+          rewards_pool  = rewards_pool + $3,
+          fees_collected  = fees_collected + $4
+        WHERE event_id = $2
+      `,
+      [newShares, event_id, rawCost, fee]
     );
 
     const marketAfter = calculateMarketPrices(newShares, b_constant);
@@ -132,8 +139,15 @@ async function sellEvent(req, res) {
 
     // Update the pool
     await client.query(
-      "UPDATE events_data SET shares_data = $1 WHERE event_id = $2",
-      [newShares, event_id]
+      `
+        UPDATE events_data
+        SET 
+          shares_data   = $1,
+          rewards_pool  = rewards_pool - $3,
+          fees_collected  = fees_collected + $4
+        WHERE event_id = $2
+      `,
+      [newShares, event_id, rawPayout, fee]
     );
 
     const marketAfter = calculateMarketPrices(newShares, b_constant);
