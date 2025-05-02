@@ -58,12 +58,11 @@ body {
   white-space: nowrap; /* prevent wrap */
 }
 
-#filterAndRefreshDiv {
+#filterWrapper {
   display: flex;
-  justify-content: space-between; /* filters on the left, refresh on the right */
-  align-items: center; /* vertical center alignment */
-  margin: 1rem 1rem 0 1rem; /* space above */
-  padding: 0;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
 }
 
 #refreshButton {
@@ -78,24 +77,72 @@ body {
   margin: 0;
 }
 
+#filterWrapper {
+  position: relative;
+  overflow: hidden;
+}
+
 #filterButtons {
   display: flex;
-  justify-content: flex-start;
-  margin: 0;
-  padding: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+#filterWrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2rem;
+  pointer-events: none;
+  background: linear-gradient(to right, var(--light-blue), transparent);
+  transition: opacity 0.2s;
+}
+
+#filterWrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 2rem;
+  pointer-events: none;
+  background: linear-gradient(to left, var(--light-blue), transparent);
+  transition: opacity 0.2s;
+}
+
+#filterWrapper.hide-fade-left::before {
+  opacity: 0;
+}
+#filterWrapper.hide-fade-right::after {
+  opacity: 0;
+}
+
+#filterButtons::-webkit-scrollbar {
+  display: none;
+}
+#filterButtons {
+  scrollbar-width: none; /* Firefox */
 }
 
 .filter-btn {
   border: none;
-  padding: 4px 8px; /* smaller padding */
+  padding: 12px 24px; /* smaller padding */
   margin: 0 2px; /* closer spacing */
   cursor: pointer;
   background-color: transparent;
   color: var(--dark-blue);
-  border-radius: 4px;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 0.9rem; /* slightly smaller text */
+  font-size: 1.1rem;
   transition: background-color 0.2s ease, transform 0.1s ease;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
 }
 
 /* Hover effect */
@@ -204,7 +251,7 @@ canvas {
 }
 
 #lastUpdated {
-  text-align: right;
+  text-align: center;
   font-size: 0.7rem;
   color: #555;
   margin-top: 5px;
@@ -237,10 +284,31 @@ canvas {
     font-size: 0.5rem;
   }
 
+  #filterButtons {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding-top: 1rem; /* remove any padding if present */
+    scroll-snap-type: x mandatory;
+  }
+
   .filter-btn {
-    padding: 3px 4px; /* smaller padding */
-    margin: 0 0px; /* closer spacing */
-    font-size: 0.65rem; /* slightly smaller text */
+    flex: 0 0 auto; /* don’t let them shrink */
+    scroll-snap-align: start;
+    font-size: 0.8rem;
+    padding: 8px 16px;
+  }
+
+  /* push the very first button in 1rem… */
+  #filterButtons .filter-btn:first-child {
+    margin-left: 1rem;
+  }
+  /* …and the very last button in 1rem */
+  #filterButtons .filter-btn:last-child {
+    margin-right: 1rem;
   }
 
   #refreshButton {

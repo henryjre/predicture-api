@@ -12,11 +12,13 @@ let chart;
 let eventId = null;
 
 const rangeMap = {
+  "1m": 1 * 60 * 1000,
   "5M": 5 * 60 * 1000,
   "15M": 15 * 60 * 1000,
   "30M": 30 * 60 * 1000,
   "1H": 60 * 60 * 1000,
-  "6H": 6 * 60 * 60 * 1000,
+  "2H": 2 * 60 * 60 * 1000,
+  "4H": 4 * 60 * 60 * 1000,
   "1D": 24 * 60 * 60 * 1000,
   "1W": 7 * 24 * 60 * 60 * 1000,
   "1M": 30 * 24 * 60 * 60 * 1000,
@@ -202,9 +204,28 @@ function init() {
   if (!eventId) return alert("Missing event_id");
   setupFilters();
   loadAndRender();
-  document
-    .getElementById("refreshButton")
-    .addEventListener("click", loadAndRender);
+
+  setInterval(loadAndRender, 10000);
 }
+
+const wrapper = document.getElementById("filterWrapper");
+const scroller = document.getElementById("filterButtons");
+
+function updateFades() {
+  const { scrollLeft, scrollWidth, clientWidth } = scroller;
+  // hide left fade if scrolled all the way left
+  wrapper.classList.toggle("hide-fade-left", scrollLeft <= 0);
+  // hide right fade if scrolled to (or past) the end
+  wrapper.classList.toggle(
+    "hide-fade-right",
+    scrollLeft + clientWidth >= scrollWidth - 1 /* fudge for rounding */
+  );
+}
+
+// wire it up
+scroller.addEventListener("scroll", updateFades);
+window.addEventListener("resize", updateFades);
+// initial check
+updateFades();
 
 init();
