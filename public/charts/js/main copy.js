@@ -93,13 +93,6 @@ function renderChart(title, data) {
     pointHoverRadius: 0,
   }));
 
-  Chart.Tooltip.positioners.top = function (elements, eventPosition) {
-    return {
-      x: eventPosition.x, // follow the crosshair X
-      y: 0, // lock to the very top of the canvas
-    };
-  };
-
   if (chart) chart.destroy();
   chart = new Chart(document.getElementById("priceChart"), {
     type: "line",
@@ -110,28 +103,10 @@ function renderChart(title, data) {
       layout: { padding: { top: 30, right: 50 } },
       interaction: { mode: "index", intersect: false },
       plugins: {
-        legend: { display: true },
-        labels: {
-          usePointStyle: true,
-        },
-        onClick: (e, legendItem, legend) => {
-          const ci = legend.chart;
-          const i = legendItem.datasetIndex;
-          // toggle visibility:
-          const currentlyVisible = ci.isDatasetVisible(i);
-          ci.setDatasetVisibility(i, !currentlyVisible);
-          // fade the line rather than remove:
-          ci.options.datasets.line.borderColor[i] = currentlyVisible
-            ? ci.data.datasets[i].borderColor.replace(
-                /(rgb\(.+?\))/,
-                "rgba($1,0.2)"
-              )
-            : ci.data.datasets[i].borderColor.replace(/,0\.2\)/, ")");
-          ci.update();
-        },
+        legend: { display: false },
         tooltip: {
           enabled: false,
-          external(context) {
+          external: function (context) {
             const { chart, tooltip } = context;
             let root = document.getElementById("chartjs-tooltip");
             if (!root) {
@@ -140,47 +115,29 @@ function renderChart(title, data) {
               document.body.appendChild(root);
             }
             if (tooltip.opacity === 0) {
-              root.innerHTML = "";
               root.style.opacity = 0;
               return;
             }
             root.innerHTML = "";
-            root.style.opacity = 1;
-
             const canvasRect = chart.canvas.getBoundingClientRect();
-            const caretX = tooltip.caretX;
-
-            // ——— Time pill at bottom, above X-axis ———
-            const timeDiv = document.createElement("div");
-            timeDiv.className = "tooltip-time";
-            timeDiv.textContent = tooltip.title[0];
-            root.appendChild(timeDiv);
-
-            // compute Y just above the axis line:
-            // canvasRect.bottom = very bottom of drawing area
-            // subtract a bit to clear labels (e.g. 20px)
-            const yPos = canvasRect.bottom + window.pageYOffset - 20;
-
-            timeDiv.style.left = `${
-              canvasRect.left + window.pageXOffset + caretX
-            }px`;
-            timeDiv.style.top = `${yPos}px`;
-
-            // ——— Data pills (“riding the lines”) ———
-            tooltip.dataPoints.forEach((dp, idx) => {
+            tooltip.dataPoints.forEach((dp) => {
+              // 1) find the visual element for this series+index
               const meta = chart.getDatasetMeta(dp.datasetIndex);
-              const { x, y } = meta.data[dp.dataIndex].tooltipPosition();
-
-              const pill = document.createElement("div");
-              pill.className = "tooltip-item";
-              pill.style.backgroundColor = dp.dataset.borderColor;
-              pill.style.zIndex = idx + 1;
-              pill.textContent = `${dp.dataset.label}: ${dp.formattedValue}`;
-              root.appendChild(pill);
-
-              pill.style.left = `${canvasRect.left + window.pageXOffset + x}px`;
-              pill.style.top = `${canvasRect.top + window.pageYOffset + y}px`;
+              const elm = meta.data[dp.dataIndex];
+              // 2) ask it where to draw
+              const pos = elm.tooltipPosition();
+              // 3) create a pill
+              const div = document.createElement("div");
+              div.className = "tooltip-item";
+              div.style.backgroundColor = dp.dataset.borderColor;
+              div.style.left =
+                canvasRect.left + window.pageXOffset + pos.x + "px";
+              div.style.top =
+                canvasRect.top + window.pageYOffset + pos.y + "px";
+              div.textContent = `${dp.dataset.label}: ${dp.formattedValue}`;
+              root.appendChild(div);
             });
+            root.style.opacity = 1;
           },
         },
         datalabels: {

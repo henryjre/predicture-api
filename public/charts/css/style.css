@@ -74,7 +74,7 @@ body {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────
-   3. CHART & LEGEND
+   3. CHART, TOOLTIP & LEGEND
 ──────────────────────────────────────────────────────────────────────────────── */
 
 .container {
@@ -205,6 +205,45 @@ canvas {
     width: 8px;
     height: 8px;
   }
+}
+
+/* make sure the tooltip is positioned relative to the chart container */
+.chart-container {
+  position: relative; /* needed so pills position inside here */
+}
+
+#chartjs-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.tooltip-time {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  padding: 4px 8px;
+  background: var(--dark-blue);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.tooltip-item {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────
