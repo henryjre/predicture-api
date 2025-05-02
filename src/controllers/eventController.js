@@ -63,17 +63,17 @@ async function buyEvent(req, res) {
     const marketAfter = calculateMarketPrices(newShares, b_constant);
 
     await client.query(
-      `INSERT INTO price_snapshots (event_id, prices)
-       VALUES ($1, $2)`,
-      [event_id, marketAfter]
+      `INSERT INTO trade_history (event_id, prices, shares_bought, raw_cost)
+       VALUES ($1, $2, $3, $4)`,
+      [event_id, marketAfter, shares, rawCost]
     );
 
     await client.query("COMMIT");
 
-    // console.log(`[BUY] ${user_id} bought ${shares} shares of ${choice}`);
-    // console.log(`Current Shares:`, newShares);
-    // console.log(`Current Market:`, marketAfter);
-    // ("------------------------------------------------------------");
+    console.log(`[BUY] ${user_id} bought ${shares} shares of ${choice}`);
+    console.log(`Current Shares:`, newShares);
+    console.log(`Current Market:`, marketAfter);
+    ("------------------------------------------------------------");
 
     res.status(200).json({
       rawCost,
@@ -139,9 +139,9 @@ async function sellEvent(req, res) {
     const marketAfter = calculateMarketPrices(newShares, b_constant);
 
     await client.query(
-      `INSERT INTO price_snapshots (event_id, prices)
-       VALUES ($1, $2)`,
-      [event_id, marketAfter]
+      `INSERT INTO trade_history (event_id, prices, shares_bought, raw_cost)
+       VALUES ($1, $2, $3, $4)`,
+      [event_id, marketAfter, shares, rawPayout]
     );
 
     await client.query("COMMIT");
@@ -173,8 +173,8 @@ export async function getPriceData(req, res) {
   const { event_id } = req.params;
   try {
     const { rows } = await pool.query(
-      `SELECT snapshot_time, prices
-       FROM price_snapshots
+      `SELECT snapshot_time, prices, raw_cost
+       FROM trade_history
        WHERE event_id = $1
        ORDER BY snapshot_time ASC`,
       [event_id]

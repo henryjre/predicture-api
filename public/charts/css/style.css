@@ -299,6 +299,7 @@ canvas {
     flex: 0 0 auto; /* don’t let them shrink */
     scroll-snap-align: start;
     font-size: 0.8rem;
+    font-weight: bold;
     padding: 8px 16px;
   }
 

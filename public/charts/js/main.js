@@ -177,13 +177,18 @@ async function loadAndRender() {
     originalData = json.data || [];
 
     if (json.shares_data) {
-      const totalVolume = Object.values(json.shares_data).reduce(
+      const totalRewards = Object.values(json.shares_data).reduce(
         (sum, val) => sum + val,
         0
       );
-      document.getElementById("volumeDisplay").textContent =
-        formatter.format(totalVolume);
     }
+
+    const totalVolume = json.data.reduce(
+      (sum, { raw_cost }) => sum + parseFloat(raw_cost),
+      0
+    );
+    document.getElementById("volumeDisplay").textContent =
+      formatter.format(totalVolume);
 
     document.getElementById("endDateDisplay").textContent = json.end_date;
 
@@ -205,7 +210,7 @@ function init() {
   setupFilters();
   loadAndRender();
 
-  setInterval(loadAndRender, 10000);
+  setInterval(loadAndRender, 30000);
 }
 
 const wrapper = document.getElementById("filterWrapper");
