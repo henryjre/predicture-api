@@ -176,19 +176,19 @@ async function loadAndRender() {
     const json = await fetchData(eventId);
     originalData = json.data || [];
 
-    if (json.shares_data) {
-      const totalRewards = Object.values(json.shares_data).reduce(
-        (sum, val) => sum + val,
-        0
-      );
+    if (json.rewards_pool) {
+      const totalRewards = formatter.format(json.rewards_pool);
+
+      document.getElementById("rewardsDisplay").textContent = totalRewards;
     }
 
     const totalVolume = json.data.reduce(
       (sum, { raw_cost }) => sum + parseFloat(raw_cost),
       0
     );
-    document.getElementById("volumeDisplay").textContent =
-      formatter.format(totalVolume);
+    document.getElementById("volumeDisplay").textContent = `${formatter.format(
+      totalVolume
+    )} Vol`;
 
     document.getElementById("endDateDisplay").textContent = json.end_date;
 

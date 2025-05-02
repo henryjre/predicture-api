@@ -183,7 +183,7 @@ async function sellEvent(req, res) {
   }
 }
 
-export async function getPriceData(req, res) {
+export async function getChartData(req, res) {
   const { event_id } = req.params;
   try {
     const { rows } = await pool.query(
@@ -195,7 +195,7 @@ export async function getPriceData(req, res) {
     );
 
     const eventRes = await pool.query(
-      `SELECT event_title, shares_data, to_char(end_date, 'Month DD, YYYY') AS formatted_date
+      `SELECT event_title, rewards_pool, to_char(end_date, 'Month DD, YYYY') AS formatted_date
        FROM events_data
        WHERE event_id = $1`,
       [event_id]
@@ -204,7 +204,7 @@ export async function getPriceData(req, res) {
 
     res.json({
       title: event.event_title,
-      shares_data: event.shares_data,
+      rewards_pool: event.rewards_pool,
       end_date: event.formatted_date,
       data: rows,
     });

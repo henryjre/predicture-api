@@ -14,6 +14,23 @@ body {
   color: var(--dark-blue);
 }
 
+#volumeUnderTitle {
+  justify-content: center;
+  margin-top: -0.3rem; /* tighter to the title */
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem; /* smaller font */
+  color: rgba(255, 255, 255, 0.85); /* soft white */
+  font-weight: 500;
+}
+
+/* Icon color override */
+#volumeUnderTitle .info-icon svg {
+  stroke: rgba(255, 255, 255, 0.85);
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
 /* container holds two rows vertically */
 #infoContainer {
   display: flex;
@@ -265,6 +282,11 @@ canvas {
   #chartTitle {
     text-align: left;
   }
+
+  #volumeUnderTitle {
+    justify-content: left;
+  }
+
   /* Align legend with title and reduce size */
   #customLegend {
     justify-content: flex-start;
