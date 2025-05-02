@@ -131,6 +131,7 @@ body {
 }
 
 .filter-btn {
+  font-family: inherit;
   border: none;
   padding: 12px 24px; /* smaller padding */
   margin: 0 2px; /* closer spacing */
@@ -299,7 +300,6 @@ canvas {
     flex: 0 0 auto; /* don’t let them shrink */
     scroll-snap-align: start;
     font-size: 0.8rem;
-    font-weight: bold;
     padding: 8px 16px;
   }
 
