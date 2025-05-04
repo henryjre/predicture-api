@@ -4,7 +4,7 @@ import pool from "../db.js";
 export async function getEventData(eventId) {
   const query = `
     SELECT *
-    FROM events_data
+    FROM events
     WHERE event_id = $1;
   `;
 
@@ -23,7 +23,7 @@ export async function getEventData(eventId) {
 // Update shares_data after the trade
 export async function updateSharesData(eventId, newShares) {
   const updateQuery = `
-    UPDATE events_data SET shares_data = $1 WHERE event_id = $2;
+    UPDATE events SET shares_data = $1 WHERE event_id = $2;
   `;
 
   const updateValues = [newShares, eventId];

@@ -363,7 +363,7 @@ async function loadAndRender() {
       json.rewards_pool || 0
     );
     document.getElementById("endDateDisplay").textContent =
-      json.end_date || "—";
+      json.closes_at || "—";
 
     // Chart
     renderChart(

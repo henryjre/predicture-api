@@ -32,7 +32,7 @@ async function buyEvent(req, res) {
 
     // Lock the row to avoid race conditions
     const eventRes = await client.query(
-      "SELECT * FROM events_data WHERE event_id = $1 FOR UPDATE",
+      "SELECT * FROM events WHERE event_id = $1 FOR UPDATE",
       [event_id]
     );
 
@@ -57,7 +57,7 @@ async function buyEvent(req, res) {
     // Update the locked row with new shares
     await client.query(
       `
-        UPDATE events_data
+        UPDATE events
         SET 
           shares_data   = $1,
           rewards_pool  = rewards_pool + $3,
@@ -110,7 +110,7 @@ async function sellEvent(req, res) {
 
     // Lock event row
     const eventRes = await client.query(
-      "SELECT * FROM events_data WHERE event_id = $1 FOR UPDATE",
+      "SELECT * FROM events WHERE event_id = $1 FOR UPDATE",
       [event_id]
     );
 
@@ -140,7 +140,7 @@ async function sellEvent(req, res) {
     // Update the pool
     await client.query(
       `
-        UPDATE events_data
+        UPDATE events
         SET 
           shares_data   = $1,
           rewards_pool  = rewards_pool - $3,
@@ -195,8 +195,8 @@ export async function getChartData(req, res) {
     );
 
     const eventRes = await pool.query(
-      `SELECT event_title, shares_data, rewards_pool, to_char(end_date, 'Month DD, YYYY') AS formatted_date
-       FROM events_data
+      `SELECT event_title, shares_data, rewards_pool, to_char(closes_at, 'Month DD, YYYY') AS formatted_date
+       FROM events
        WHERE event_id = $1`,
       [event_id]
     );
@@ -206,7 +206,7 @@ export async function getChartData(req, res) {
       title: event.event_title,
       rewards_pool: event.rewards_pool,
       shares_data: event.shares_data,
-      end_date: event.formatted_date,
+      closes_at: event.formatted_date,
       data: rows,
     });
   } catch (err) {
