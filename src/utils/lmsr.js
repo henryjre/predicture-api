@@ -14,14 +14,11 @@ function lmsrCost(shareMap, b) {
 // Calculate the cost as well as the shares data after trade
 export function calculatePurchaseCost(
   shares,
-  baseB,
+  b,
   choice,
   amountToBuy,
-  feeRate = 0.02,
-  k = 0.2
+  feeRate = 0.02
 ) {
-  const b = calculateDynamicB(shares, baseB, k);
-
   const qBefore = { ...shares };
   const qAfter = { ...shares };
 
@@ -46,14 +43,12 @@ export function calculatePurchaseCost(
 // Calculate the selling payout as well as the shares data after trade
 export function calculateSellPayout(
   shares,
-  baseB,
+  b,
   choice,
   amountToSell,
   feeRate = 0.02,
   k = 0.2
 ) {
-  const b = calculateDynamicB(shares, baseB, k);
-
   const qBefore = { ...shares };
   const qAfter = { ...shares };
 
@@ -82,9 +77,7 @@ export function calculateSellPayout(
 }
 
 // Getting the actual price of shares
-export function calculateMarketPrices(shares, baseB = 100, k = 0.2) {
-  const b = calculateDynamicB(shares, baseB, k);
-
+export function calculateMarketPrices(shares, b) {
   const expShares = {};
   let sumExp = 0;
 

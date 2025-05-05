@@ -428,3 +428,13 @@ function init() {
 document.addEventListener("DOMContentLoaded", () => {
   init();
 });
+
+// Swiper for filter buttons
+const filterSwiper = new Swiper('.filter-swiper', {
+  slidesPerView: 'auto',
+  spaceBetween: 8,
+  freeMode: true,
+  grabCursor: true,
+  mousewheel: true,
+  // No navigation or pagination
+});

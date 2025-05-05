@@ -2,8 +2,8 @@ import {
   calculatePurchaseCost,
   calculateMarketPrices,
   calculateSellPayout,
-} from "../functions/functionHelpers.js";
-import pool from "../db.js";
+} from "../utils/lmsr.js";
+import pool from "../database/db.js";
 
 export async function eventReceive(req, res) {
   const { action } = req.body;
@@ -23,7 +23,7 @@ export async function eventReceive(req, res) {
 }
 
 async function buyEvent(req, res) {
-  const { user_id, event_id, action, shares, choice, b_constant } = req.body;
+  const { user_id, event_id, action, shares, choice, b_received } = req.body;
 
   const client = await pool.connect();
 
@@ -41,38 +41,58 @@ async function buyEvent(req, res) {
     }
 
     const event = eventRes.rows[0];
+
     const shares_data = event.shares_data;
+    const currentB = calculateDynamicB(shares_data, b_received);
 
     // Calculate market before the update
-    const marketBefore = calculateMarketPrices(shares_data, b_constant);
+    const marketBefore = calculateMarketPrices(shares_data, currentB);
 
     // Compute cost and new shares
     const { rawCost, fee, cost, newShares } = calculatePurchaseCost(
       shares_data,
-      b_constant,
+      currentB,
       choice,
       shares
     );
 
+    const newB = calculateDynamicB(newShares, b_received);
+
     // Update the locked row with new shares
     await client.query(
-      `
-        UPDATE events
-        SET 
-          shares_data   = $1,
-          rewards_pool  = rewards_pool + $3,
-          fees_collected  = fees_collected + $4
-        WHERE event_id = $2
-      `,
-      [newShares, event_id, rawCost, fee]
+      `UPDATE events
+         SET shares_data  = $1,
+             rewards_pool = rewards_pool + $3,
+             fees_collected = fees_collected + $4,
+             b_constant = $5
+       WHERE event_id = $2`,
+      [newShares, event_id, rawCost, fee, newB]
     );
 
-    const marketAfter = calculateMarketPrices(newShares, b_constant);
+    const marketAfter = calculateMarketPrices(newShares, newB);
 
     await client.query(
       `INSERT INTO trade_history (event_id, prices, shares_bought, raw_cost)
        VALUES ($1, $2, $3, $4)`,
       [event_id, marketAfter, shares, rawCost]
+    );
+
+    await client.query(
+      `INSERT INTO user_positions (user_id, event_id, choice, shares, cost_basis, fees_paid)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (user_id, event_id, choice)
+       DO UPDATE SET
+         shares = user_positions.shares + EXCLUDED.shares,
+         cost_basis = user_positions.cost_basis + EXCLUDED.cost_basis,
+         fees_paid  = user_positions.fees_paid  + EXCLUDED.fees_paid`,
+      [
+        user_id,
+        event_id,
+        choice,
+        shares, // +shares for buy
+        cost, // +cost for buy
+        fee,
+      ]
     );
 
     await client.query("COMMIT");
@@ -101,7 +121,7 @@ async function buyEvent(req, res) {
 }
 
 async function sellEvent(req, res) {
-  const { user_id, event_id, shares, choice, b_constant } = req.body;
+  const { user_id, event_id, shares, choice, b_received } = req.body;
 
   const client = await pool.connect();
 
@@ -128,34 +148,53 @@ async function sellEvent(req, res) {
       );
     }
 
-    const marketBefore = calculateMarketPrices(shares_data, b_constant);
+    const currentB = calculateDynamicB(newShares, b_received);
+
+    const marketBefore = calculateMarketPrices(shares_data, currentB);
 
     const { rawPayout, fee, payout, newShares } = calculateSellPayout(
       shares_data,
-      b_constant,
+      currentB,
       choice,
       shares
     );
 
+    const newB = calculateDynamicB(newShares, b_received);
     // Update the pool
     await client.query(
-      `
-        UPDATE events
-        SET 
-          shares_data   = $1,
-          rewards_pool  = rewards_pool - $3,
-          fees_collected  = fees_collected + $4
-        WHERE event_id = $2
-      `,
-      [newShares, event_id, rawPayout, fee]
+      `UPDATE events
+         SET shares_data   = $1,
+             rewards_pool  = rewards_pool - $3,
+             fees_collected = fees_collected + $4,
+             b_constant = $5
+       WHERE event_id = $2`,
+      [newShares, event_id, rawPayout, fee, newB]
     );
 
-    const marketAfter = calculateMarketPrices(newShares, b_constant);
+    const marketAfter = calculateMarketPrices(newShares, newB);
 
     await client.query(
       `INSERT INTO trade_history (event_id, prices, shares_bought, raw_cost)
        VALUES ($1, $2, $3, $4)`,
       [event_id, marketAfter, shares, rawPayout]
+    );
+
+    await client.query(
+      `INSERT INTO user_positions (user_id, event_id, choice, shares, cost_basis, fees_paid)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (user_id, event_id, choice)
+       DO UPDATE SET
+         shares = user_positions.shares + EXCLUDED.shares,
+         cost_basis = user_positions.cost_basis + EXCLUDED.cost_basis,
+         fees_paid  = user_positions.fees_paid  + EXCLUDED.fees_paid`,
+      [
+        user_id,
+        event_id,
+        choice,
+        -shares, // –shares for sell
+        -payout, // -payout for sell
+        fee,
+      ]
     );
 
     await client.query("COMMIT");
@@ -180,6 +219,36 @@ async function sellEvent(req, res) {
     res.status(500).json({ ok: false, message: error.message });
   } finally {
     client.release();
+  }
+}
+
+export async function getCurrentPrices(req, res) {
+  const { event_id } = req.params;
+
+  try {
+    const eventRes = await pool.query(
+      `SELECT  event_title, shares_data, b_constant
+       FROM events
+       WHERE event_id = $1`,
+      [event_id]
+    );
+    const event = eventRes.rows[0];
+
+    const marketPrices = calculateMarketPrices(
+      event.shares_data,
+      event.b_constant
+    );
+
+    res.json({
+      ok: true,
+      title: event.event_title,
+      data: marketPrices,
+    });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ ok: false, message: "Failed to fetch price history" });
   }
 }
 
@@ -208,6 +277,29 @@ export async function getChartData(req, res) {
       shares_data: event.shares_data,
       closes_at: event.formatted_date,
       data: rows,
+    });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ ok: false, message: "Failed to fetch price history" });
+  }
+}
+
+export async function getEventData(req, res) {
+  const { event_id } = req.params;
+  try {
+    const eventRes = await pool.query(
+      `SELECT *, to_char(closes_at, 'Month DD, YYYY') AS formatted_date
+       FROM events
+       WHERE event_id = $1`,
+      [event_id]
+    );
+    const event = eventRes.rows[0];
+
+    res.json({
+      ok: true,
+      event: event,
     });
   } catch (err) {
     console.error(err);

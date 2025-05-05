@@ -14,13 +14,8 @@ const router = Router();
 // Mount all API routes under /api
 router.use("/api", apiRouter);
 
-// // serve /public as root of static assets
-router.use("/html", static_(path.join(__dirname, "../../public/charts")));
-
-// /html/charts
-router.get("/html/charts", (req, res) => {
-  res.sendFile(path.join(__dirname, "../../public/charts/price_chart.html"));
-});
+// Serve static files from the public directory
+router.use("/html", static_(path.join(__dirname, "../../public")));
 
 // Getting the /api endpoint
 router.get("/api", home);
