@@ -3,7 +3,7 @@ import {
   eventReceive,
   getChartData,
   getEventData,
-  getCurrentPrices,
+  getCurrenMarketData,
 } from "../../../controllers/eventController.js";
 
 const router = Router();
@@ -15,7 +15,7 @@ router.post("/trade", eventReceive);
 router.get("/:event_id/prices", getChartData);
 
 // GET /api/events/{event_id}/prices
-router.get("/:event_id/current_market", getCurrentPrices);
+router.get("/:event_id/current_market", getCurrenMarketData);
 
 // GET /api/events/{event_id}/data
 router.get("/:event_id/data", getEventData);

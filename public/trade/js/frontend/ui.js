@@ -1,4 +1,9 @@
-import { setupSwapForm } from "../backend/calculations.js";
+import {
+  calculateSharesToTokenBuyInput,
+  calculateSharesToTokenSellInput,
+  calculateTokenToSharesBuyInput,
+  calculateTokenToSharesSellInput,
+} from "../backend/handleInput.js";
 
 // UI State Management
 export function setupBuySellToggle() {
@@ -52,7 +57,9 @@ export function setupBuySellToggle() {
       executeBtn.textContent = "Sell";
     }
     // Refresh the exchange values and summary
-    setupSwapForm(true);
+    // (true);
+
+    handleCalculationOfInput(mode);
   }
 
   buyBtn.addEventListener("click", () => setMode("buy"));
@@ -62,36 +69,18 @@ export function setupBuySellToggle() {
   setMode("buy");
 }
 
-export function updateSwapRowState() {
-  const fromAmt = document.getElementById("fromAmount");
-  const toAmt = document.getElementById("toAmount");
-
-  if (fromAmt.value !== "") {
-    fromAmt.closest(".swap-row").classList.add("has-value");
-  } else {
-    fromAmt.closest(".swap-row").classList.remove("has-value");
+function handleCalculationOfInput(mode) {
+  if (mode === "buy") {
+    if (window.lastModifiedInput === "from") {
+      calculateTokenToSharesBuyInput();
+    } else if (window.lastModifiedInput === "to") {
+      calculateSharesToTokenBuyInput();
+    }
+  } else if (mode === "sell") {
+    if (window.lastModifiedInput === "from") {
+      calculateSharesToTokenSellInput();
+    } else if (window.lastModifiedInput === "to") {
+      calculateTokenToSharesSellInput();
+    }
   }
-  if (toAmt.value !== "") {
-    toAmt.closest(".swap-row").classList.add("has-value");
-  } else {
-    toAmt.closest(".swap-row").classList.remove("has-value");
-  }
-}
-
-export function formatAmount(input) {
-  // Remove any non-numeric characters except decimal point
-  let value = input.value.replace(/[^\d.]/g, "");
-
-  // Ensure only one decimal point
-  const parts = value.split(".");
-  if (parts.length > 2) {
-    value = parts[0] + "." + parts.slice(1).join("");
-  }
-
-  // Limit to 6 decimal places
-  if (parts.length > 1) {
-    value = parts[0] + "." + parts[1].slice(0, 6);
-  }
-
-  input.value = value;
 }

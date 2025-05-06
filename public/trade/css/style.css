@@ -333,6 +333,27 @@ footer {
   color: inherit;
 }
 
+.balance-loading {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--dark-blue);
+  border-bottom-color: var(--regular-blue);
+  margin-right: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .swap-row {
   display: flex;
   align-items: center;
@@ -503,6 +524,10 @@ footer {
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
   text-align: center;
   font-family: inherit;
+
+  @media (max-width: 768px) {
+    width: 92%;
+  }
 }
 
 .action-btn {

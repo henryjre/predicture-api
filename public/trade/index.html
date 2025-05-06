@@ -103,6 +103,8 @@
               class="swap-amount"
               id="fromAmount"
               placeholder="0.00"
+              inputmode="decimal"
+              autocomplete="off"
             />
           </div>
         </div>
@@ -123,7 +125,19 @@
             </svg>
           </span>
         </div>
-        <div class="swap-label swap-label-to">You will receive</div>
+        <div
+          class="swap-label swap-label-to"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <span>You will receive</span>
+          <span id="receive-balance-loading" style="display: none">
+            <span class="balance-loading"></span>
+          </span>
+        </div>
         <div class="swap-section swap-to">
           <div class="swap-row">
             <button class="swap-asset-btn" id="toAssetBtn">
@@ -149,6 +163,8 @@
               class="swap-amount"
               id="toAmount"
               placeholder="0.00"
+              inputmode="decimal"
+              autocomplete="off"
             />
           </div>
         </div>

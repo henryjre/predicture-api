@@ -1,17 +1,32 @@
+import { calculateMarketPrices } from "./calculations.js";
 // API functionality
-export async function fetchCurrentMarket(id) {
+export async function fetchCurrentMarket(id, isRefresh, amountToBuy) {
   const res = await fetch(`/api/events/${id}/current_market`);
   const result = await res.json();
 
-  window.marketPrices = result.ok ? result.data : {};
+  window.sharesData = result.ok ? result.shares_data : null;
+  window.bConstant = result.ok ? result.b_constant : 0;
 
   const params = new URLSearchParams(window.location.search);
   const urlChoice = params.get("choice");
-  const firstChoice = Object.keys(result.data)[0];
+  const firstChoice = Object.keys(result.shares_data)[0];
   const defaultChoice =
-    urlChoice && result.data[urlChoice] ? urlChoice : firstChoice;
+    urlChoice && result.shares_data[urlChoice] ? urlChoice : firstChoice;
 
-  window.currentPrice = result.data[defaultChoice] || 0;
+  if (!isRefresh) {
+    params.set("choice", defaultChoice);
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}?${params.toString()}`
+    );
+  }
+
+  const currentPrices = calculateMarketPrices(defaultChoice, amountToBuy);
+
+  window.marketPrices = currentPrices;
+
+  window.currentPrice = currentPrices[defaultChoice] || 0;
   window.defaultChoice = defaultChoice;
 
   return result;

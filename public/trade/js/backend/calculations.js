@@ -1,184 +1,208 @@
-import { formatAmount } from "../frontend/ui.js";
+import Decimal from "https://cdn.jsdelivr.net/npm/decimal.js@10.4.3/+esm";
 
-// Calculation functionality
-const FEE_RATE = 0.02;
+export function calculateMarketPrices(choice, amountToBuy = 0) {
+  const shares = window.sharesData;
+  const b = window.bConstant;
 
-export function calculateToFromAmount(fromAmount, price) {
-  if (!price || isNaN(price)) return null;
-  const inputVal = parseFloat(fromAmount);
-  const shares = inputVal / price;
-  return shares;
+  shares[choice] += amountToBuy;
+
+  const expShares = {};
+  let sumExp = 0;
+
+  // Step 1: Calculate exp(qj / b) for each outcome
+  for (const [key, q] of Object.entries(shares)) {
+    const expVal = Math.exp(q / b);
+    expShares[key] = expVal;
+    sumExp += expVal;
+  }
+
+  // Step 2: Normalize to get probabilities
+  const prices = {};
+  for (const [key, expVal] of Object.entries(expShares)) {
+    prices[key] = parseFloat((expVal / sumExp).toFixed(4)); // Rounded to 4 decimals
+  }
+
+  return prices;
 }
 
-export function calculateFromToAmount(toAmount, price) {
-  if (!price || isNaN(price)) return null;
-  const shares = parseFloat(toAmount);
-  const amount = (shares * price).toFixed(4);
-  return amount;
+///////////////////////////////////////////
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+
+export function buySharesToToken(amount, feeRate = 0.02) {
+  const shares = window.sharesData;
+  const b = new Decimal(window.bConstant);
+  const choice = new URLSearchParams(window.location.search).get("choice");
+
+  // Round down the number of shares to buy
+  const buyShares = Math.floor(amount);
+
+  // Cost function using Decimal
+  const cost = (q) => {
+    let sumExp = new Decimal(0);
+    for (const qj of Object.values(q)) {
+      const qDecimal = new Decimal(qj);
+      const expTerm = Decimal.exp(qDecimal.div(b));
+      sumExp = sumExp.plus(expTerm);
+    }
+    return b.times(Decimal.ln(sumExp));
+  };
+
+  // Cost before purchase
+  const originalCost = cost(shares);
+
+  // Update shares
+  const updatedShares = { ...shares };
+  updatedShares[choice] = (updatedShares[choice] || 0) + buyShares;
+
+  // Cost after purchase
+  const newCost = cost(updatedShares);
+
+  // Raw token cost
+  const rawTokens = newCost.minus(originalCost);
+
+  // Round to 2 decimal places
+  const tokens = rawTokens.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const fee = tokens.times(feeRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const totalCost = tokens.plus(fee).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  // Average price per share (4 decimals)
+  const averagePrice =
+    buyShares > 0
+      ? totalCost.div(buyShares).toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+      : new Decimal(0);
+
+  return {
+    fee: Number(fee),
+    totalCost: Number(totalCost),
+    averagePrice: Number(averagePrice),
+  };
 }
 
-export function calculateFee(amount) {
-  return (amount * FEE_RATE).toFixed(2);
+export function buyTokenToShares(amount, feeRate = 0.02) {
+  const shares = window.sharesData;
+  const b = new Decimal(window.bConstant);
+  const choice = new URLSearchParams(window.location.search).get("choice");
+
+  // Parse input amount and apply fee deduction (to get net usable tokens)
+  const amountDecimal = new Decimal(amount);
+  const netAmount = amountDecimal.div(new Decimal(1).plus(feeRate));
+
+  // Precompute exponentials
+  const expOthers = [];
+  let sumExpOthers = new Decimal(0);
+
+  for (const [key, qj] of Object.entries(shares)) {
+    const expQj = Decimal.exp(new Decimal(qj).div(b));
+    if (key !== choice) {
+      expOthers.push(expQj);
+      sumExpOthers = sumExpOthers.plus(expQj);
+    }
+  }
+
+  const qk = new Decimal(shares[choice] || 0);
+  const expQk = Decimal.exp(qk.div(b));
+
+  // Core formula:
+  // Δqk = b * ln( ( (e^(qk/b) + ∑e^(qj/b)) * e^(amount/b) ) - ∑e^(qj/b) ) - qk
+  const part1 = expQk.plus(sumExpOthers);
+  const part2 = Decimal.exp(netAmount.div(b));
+  const inner = part1.times(part2).minus(sumExpOthers);
+  const deltaQk = b.times(Decimal.ln(inner)).minus(qk);
+
+  // Round down to whole number of shares
+  const buyShares = deltaQk.floor().toNumber();
+
+  return {
+    shares: buyShares,
+    fee: Number(amountDecimal.minus(netAmount).toDecimalPlaces(2)),
+    averagePrice:
+      buyShares > 0
+        ? Number(
+            netAmount.div(buyShares).toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+          )
+        : 0,
+  };
 }
 
-// Track which input was last modified by the user (persistently)
-window.lastModifiedInput = window.lastModifiedInput || "from";
+export function sellSharesToToken(shareAmount, feeRate = 0.02) {
+  const shares = window.sharesData;
+  const b = new Decimal(window.bConstant);
+  const choice = new URLSearchParams(window.location.search).get("choice");
 
-export function setupSwapForm(isButtonClick) {
-  const fromAmt = document.getElementById("fromAmount");
-  const toAmt = document.getElementById("toAmount");
-  const summary = document.getElementById("swapSummary");
-  const summaryAmt = document.getElementById("summaryAmount");
-  const summaryFee = document.getElementById("summaryFee");
-  const fromBtn = document.getElementById("fromAssetBtn");
-  const toBtn = document.getElementById("toAssetBtn");
+  const sellShares = Math.floor(shareAmount); // round down to whole shares
 
-  function updateToFromAmount() {
-    window.lastModifiedInput = "to";
-    const price = window.currentPrice;
-    if (!price || isNaN(price)) return;
-    const fromSymbol = fromBtn.querySelector(".swap-symbol").textContent;
-    const toSymbol = toBtn.querySelector(".swap-symbol").textContent;
-    if (!toAmt.value) {
-      fromAmt.value = "";
-      summary.classList.remove("visible");
-      return;
+  const cost = (q) => {
+    let sumExp = new Decimal(0);
+    for (const qj of Object.values(q)) {
+      sumExp = sumExp.plus(Decimal.exp(new Decimal(qj).div(b)));
     }
-    const shares = parseFloat(toAmt.value);
-    const amount = calculateFromToAmount(shares, price);
-    fromAmt.value = amount;
-    // --- SUMMARY PRICE DISPLAY ---
-    const toggle = document.getElementById("buySellToggle");
-    const isBuy = toggle && toggle.classList.contains("buy");
-    let summaryLeft = "";
-    let summaryRight = "";
-    if (isBuy) {
-      summaryLeft = `1 <span>${
-        toBtn.querySelector(".swap-symbol").textContent
-      }</span>`;
-      summaryRight = `${parseFloat(window.currentPrice).toFixed(4)} <span>${
-        fromBtn.querySelector(".swap-symbol").textContent
-      }</span>`;
-    } else {
-      summaryLeft = `1 <span>${
-        fromBtn.querySelector(".swap-symbol").textContent
-      }</span>`;
-      summaryRight = `${(1 / parseFloat(window.currentPrice)).toFixed(
-        2
-      )} <span>${toBtn.querySelector(".swap-symbol").textContent}</span>`;
-    }
-    summaryAmt.innerHTML = `
-      <button class="summary-btn" id="refreshBtn" type="button" aria-label="Refresh prices">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path fill="var(--regular-blue)" fill-rule="evenodd" clip-rule="evenodd" d="M12 2.181a.75.75 0 0 1 1.177-.616l4.432 3.068a.75.75 0 0 1 0 1.234l-4.432 3.068A.75.75 0 0 1 12 8.32V6a7 7 0 1 0 7 7 1 1 0 1 1 2 0 9 9 0 1 1-9-9V2.181z"/>
-        </svg>
-      </button>
-      ${summaryLeft}
-      <button class="summary-btn" id="swapPrices" type="button" aria-label="Swap prices">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path fill="var(--regular-blue)" fill-rule="evenodd" clip-rule="evenodd" d="M16 3.93a.75.75 0 0 1 1.177-.617l4.432 3.069a.75.75 0 0 1 0 1.233l-4.432 3.069A.75.75 0 0 1 16 10.067V8H4a1 1 0 0 1 0-2h12V3.93zm-9.177 9.383A.75.75 0 0 1 8 13.93V16h12a1 1 0 1 1 0 2H8v2.067a.75.75 0 0 1-1.177.617l-4.432-3.069a.75.75 0 0 1 0-1.233l4.432-3.069z"/>
-        </svg>
-      </button>
-      ${summaryRight}
-    `;
-    const fee = calculateFee(amount);
-    summaryFee.textContent = `Fee ${fee} Token`;
-    summary.classList.add("visible");
+    return b.times(Decimal.ln(sumExp));
+  };
 
-    // Add event listener to the refresh button
-    setTimeout(() => {
-      const refreshBtn = document.querySelector("#summaryAmount .refresh-btn");
-      if (refreshBtn) {
-        refreshBtn.addEventListener("click", () => {
-          setupSwapForm(true);
-        });
-      }
-    }, 0);
-  }
+  const originalCost = cost(shares);
 
-  function updateFromToAmount() {
-    window.lastModifiedInput = "from";
-    const price = window.currentPrice;
-    if (!price || isNaN(price)) return;
-    const toggle = document.getElementById("buySellToggle");
-    const isBuy = toggle && toggle.classList.contains("buy");
-    if (!fromAmt.value) {
-      toAmt.value = "";
-      summary.classList.remove("visible");
-      return;
-    }
-    const inputVal = parseFloat(fromAmt.value);
-    const shares = calculateToFromAmount(inputVal, price);
-    // Set toAmount formatting based on mode
-    if (isBuy) {
-      toAmt.value = shares.toFixed(0); // shares as whole number
-    } else {
-      toAmt.value = parseFloat(shares).toFixed(2); // token as 2 decimals
-    }
-    const amount = fromAmt.value;
-    // --- SUMMARY PRICE DISPLAY ---
-    let summaryLeft = "";
-    let summaryRight = "";
-    if (isBuy) {
-      summaryLeft = `1 <span>${
-        toBtn.querySelector(".swap-symbol").textContent
-      }</span>`;
-      summaryRight = `${parseFloat(window.currentPrice).toFixed(4)} <span>${
-        fromBtn.querySelector(".swap-symbol").textContent
-      }</span>`;
-    } else {
-      summaryLeft = `1 <span>${
-        fromBtn.querySelector(".swap-symbol").textContent
-      }</span>`;
-      summaryRight = `${(1 / parseFloat(window.currentPrice)).toFixed(
-        2
-      )} <span>${toBtn.querySelector(".swap-symbol").textContent}</span>`;
-    }
-    summaryAmt.innerHTML = `
-      <button class="summary-btn" id="refreshBtn" type="button" aria-label="Refresh prices">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path fill="var(--regular-blue)" fill-rule="evenodd" clip-rule="evenodd" d="M12 2.181a.75.75 0 0 1 1.177-.616l4.432 3.068a.75.75 0 0 1 0 1.234l-4.432 3.068A.75.75 0 0 1 12 8.32V6a7 7 0 1 0 7 7 1 1 0 1 1 2 0 9 9 0 1 1-9-9V2.181z"/>
-        </svg>
-      </button>
-      ${summaryLeft}
-      <button class="summary-btn" id="swapPrices" type="button" aria-label="Swap prices">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path fill="var(--regular-blue)" fill-rule="evenodd" clip-rule="evenodd" d="M16 3.93a.75.75 0 0 1 1.177-.617l4.432 3.069a.75.75 0 0 1 0 1.233l-4.432 3.069A.75.75 0 0 1 16 10.067V8H4a1 1 0 0 1 0-2h12V3.93zm-9.177 9.383A.75.75 0 0 1 8 13.93V16h12a1 1 0 1 1 0 2H8v2.067a.75.75 0 0 1-1.177.617l-4.432-3.069a.75.75 0 0 1 0-1.233l4.432-3.069z"/>
-        </svg>
-      </button>
-      ${summaryRight}
-    `;
-    const fee = calculateFee(amount);
-    summaryFee.textContent = `Fee ${fee} Token`;
-    summary.classList.add("visible");
+  const updatedShares = { ...shares };
+  updatedShares[choice] = (updatedShares[choice] || 0) - sellShares;
 
-    // Add event listener to the refresh button
-    setTimeout(() => {
-      const refreshBtn = document.querySelector("#summaryAmount .refresh-btn");
-      if (refreshBtn) {
-        refreshBtn.addEventListener("click", () => {
-          setupSwapForm(true);
-        });
-      }
-    }, 0);
-  }
+  const newCost = cost(updatedShares);
 
-  // Add event listeners to the input fields only once
-  if (!fromAmt.hasListener) {
-    fromAmt.addEventListener("input", updateFromToAmount);
-    fromAmt.hasListener = true;
-  }
-  if (!toAmt.hasListener) {
-    toAmt.addEventListener("input", updateToFromAmount);
-    toAmt.hasListener = true;
-  }
+  const rawRefund = originalCost.minus(newCost);
 
-  // Initialize the form
-  if (isButtonClick) {
-    if (window.lastModifiedInput === "from") {
-      updateFromToAmount();
-    } else {
-      updateToFromAmount();
+  const tokens = rawRefund.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const fee = tokens.times(feeRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const netRefund = tokens.minus(fee).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  const averagePrice =
+    sellShares > 0
+      ? netRefund.div(sellShares).toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+      : new Decimal(0);
+
+  return {
+    fee: Number(fee),
+    netRefund: Number(netRefund),
+    averagePrice: Number(averagePrice),
+  };
+}
+
+export function sellTokensToShares(refundAmount, feeRate = 0.02) {
+  const shares = window.sharesData;
+  const b = new Decimal(window.bConstant);
+  const choice = new URLSearchParams(window.location.search).get("choice");
+
+  const refundDecimal = new Decimal(refundAmount);
+  const netRefund = refundDecimal.div(new Decimal(1).minus(feeRate));
+
+  // Precompute exponentials
+  const qk = new Decimal(shares[choice] || 0);
+  const expQk = Decimal.exp(qk.div(b));
+  const expOthers = [];
+  let sumExpOthers = new Decimal(0);
+
+  for (const [key, qj] of Object.entries(shares)) {
+    if (key !== choice) {
+      const exp = Decimal.exp(new Decimal(qj).div(b));
+      expOthers.push(exp);
+      sumExpOthers = sumExpOthers.plus(exp);
     }
   }
+
+  const numerator = expQk.plus(sumExpOthers);
+  const denominator = Decimal.exp(netRefund.div(b));
+  const inner = numerator.div(denominator).minus(sumExpOthers);
+
+  const N = qk.minus(b.times(Decimal.ln(inner)));
+
+  const sellShares = N.floor();
+
+  const averagePrice = sellShares.gt(0)
+    ? netRefund.div(sellShares).toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+    : new Decimal(0);
+
+  return {
+    shares: sellShares.toNumber(),
+    netRefund: Number(netRefund.toDecimalPlaces(2)),
+    fee: Number(netRefund.minus(refundDecimal).toDecimalPlaces(2)),
+    averagePrice: Number(averagePrice),
+  };
 }

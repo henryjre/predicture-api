@@ -1,16 +1,12 @@
-import {
-  setupBuySellToggle,
-  updateSwapRowState,
-  formatAmount,
-} from "./frontend/ui.js";
-import { initModal, openTokenModal } from "./frontend/modal.js";
-import { initSwiper, createChoiceSlide } from "./frontend/swiper.js";
+import { setupBuySellToggle } from "./frontend/ui.js";
+import { initModal } from "./frontend/modal.js";
+import { createChoiceSlide } from "./frontend/swiper.js";
 import {
   fetchCurrentMarket,
   getEventIdFromQuery,
   updateUrlChoice,
 } from "./backend/api.js";
-import { setupSwapForm } from "./backend/calculations.js";
+import { handleInput } from "./backend/handleInput.js";
 
 async function loadEventTitle() {
   const eventId = getEventIdFromQuery();
@@ -19,7 +15,7 @@ async function loadEventTitle() {
     return;
   }
 
-  const { ok, title, data: market } = await fetchCurrentMarket(eventId);
+  const { ok, title, shares_data } = await fetchCurrentMarket(eventId);
   if (!ok) {
     console.error("Failed to fetch market");
     document.getElementById("eventTitle").textContent = "Failed to load event.";
@@ -35,7 +31,7 @@ async function loadEventTitle() {
 
   carousel.innerHTML = "";
 
-  Object.entries(market).forEach(([choice, price]) => {
+  Object.entries(shares_data).forEach(([choice, price]) => {
     const slide = createChoiceSlide(choice, price, (selectedChoice) => {
       // Update URL and UI when choice is selected
       updateUrlChoice(selectedChoice);
@@ -56,7 +52,6 @@ async function loadEventTitle() {
       window.defaultChoice = selectedChoice;
 
       setupBuySellToggle();
-      setupSwapForm(true);
 
       // Close the modal after selection
       const tokenModal = document.getElementById("tokenModal");
@@ -71,10 +66,15 @@ async function loadEventTitle() {
 
 // Initialize everything when DOM is loaded
 window.addEventListener("DOMContentLoaded", async () => {
+  const fromInput = document.getElementById("fromAmount");
+  const toInput = document.getElementById("toAmount");
+
+  fromInput.addEventListener("input", handleInput);
+  toInput.addEventListener("input", handleInput);
+
   // Initialize modal first
   initModal();
-
+  // initInputElements();
   // Then load event data and setup UI
   await loadEventTitle();
-  setupSwapForm();
 });

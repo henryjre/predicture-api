@@ -2,6 +2,7 @@ import {
   calculatePurchaseCost,
   calculateMarketPrices,
   calculateSellPayout,
+  calculateDynamicB,
 } from "../utils/lmsr.js";
 import pool from "../database/db.js";
 
@@ -222,7 +223,7 @@ async function sellEvent(req, res) {
   }
 }
 
-export async function getCurrentPrices(req, res) {
+export async function getCurrenMarketData(req, res) {
   const { event_id } = req.params;
 
   try {
@@ -234,21 +235,15 @@ export async function getCurrentPrices(req, res) {
     );
     const event = eventRes.rows[0];
 
-    const marketPrices = calculateMarketPrices(
-      event.shares_data,
-      event.b_constant
-    );
-
     res.json({
       ok: true,
       title: event.event_title,
-      data: marketPrices,
+      b_constant: event.b_constant,
+      shares_data: event.shares_data,
     });
   } catch (err) {
     console.error(err);
-    res
-      .status(500)
-      .json({ ok: false, message: "Failed to fetch price history" });
+    res.status(500).json({ ok: false, message: "Failed to fetch market data" });
   }
 }
 
@@ -282,7 +277,7 @@ export async function getChartData(req, res) {
     console.error(err);
     res
       .status(500)
-      .json({ ok: false, message: "Failed to fetch price history" });
+      .json({ ok: false, message: "Failed to fetch snapshot data" });
   }
 }
 
@@ -303,8 +298,6 @@ export async function getEventData(req, res) {
     });
   } catch (err) {
     console.error(err);
-    res
-      .status(500)
-      .json({ ok: false, message: "Failed to fetch price history" });
+    res.status(500).json({ ok: false, message: "Failed to fetch event data" });
   }
 }
