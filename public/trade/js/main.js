@@ -6,7 +6,10 @@ import {
   getEventIdFromQuery,
   updateUrlChoice,
 } from "./backend/api.js";
-import { handleInput } from "./backend/handleInput.js";
+import {
+  handleInput,
+  handleCalculationOfInput,
+} from "./backend/handleInput.js";
 
 async function loadEventTitle() {
   const eventId = getEventIdFromQuery();
@@ -23,7 +26,6 @@ async function loadEventTitle() {
   }
 
   document.getElementById("eventTitle").textContent = title;
-  setupBuySellToggle();
 
   // Initialize carousel
   const carousel = document.getElementById("cardCarousel");
@@ -41,6 +43,7 @@ async function loadEventTitle() {
       if (!toggle) return;
 
       const isBuy = toggle.classList.contains("buy");
+
       const symbolElement = document.getElementById(
         isBuy ? "toSwapSymbol" : "fromSwapSymbol"
       );
@@ -51,7 +54,7 @@ async function loadEventTitle() {
       window.currentPrice = window.marketPrices[selectedChoice];
       window.defaultChoice = selectedChoice;
 
-      setupBuySellToggle();
+      handleCalculationOfInput(isBuy ? "buy" : "sell");
 
       // Close the modal after selection
       const tokenModal = document.getElementById("tokenModal");
@@ -66,15 +69,18 @@ async function loadEventTitle() {
 
 // Initialize everything when DOM is loaded
 window.addEventListener("DOMContentLoaded", async () => {
-  const fromInput = document.getElementById("fromAmount");
-  const toInput = document.getElementById("toAmount");
-
-  fromInput.addEventListener("input", handleInput);
-  toInput.addEventListener("input", handleInput);
-
   // Initialize modal first
   initModal();
-  // initInputElements();
-  // Then load event data and setup UI
+
   await loadEventTitle();
+
+  setTimeout(() => {
+    setupBuySellToggle();
+
+    const fromInput = document.getElementById("fromAmount");
+    const toInput = document.getElementById("toAmount");
+
+    fromInput.addEventListener("input", handleInput);
+    toInput.addEventListener("input", handleInput);
+  }, 10);
 });

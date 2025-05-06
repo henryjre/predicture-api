@@ -13,12 +13,16 @@ function fillSummary(averagePrice, fee, inputAmount, mode) {
   const summaryAmt = document.getElementById("summaryAmount");
   const summaryFee = document.getElementById("summaryFee");
 
-  const summaryLeft = `${mode === "buy" ? "Avg. " : ""} 1 <span>${
-    toBtn.querySelector(".swap-symbol").textContent
-  }</span>`;
-  const summaryRight = `${averagePrice} <span>${
-    fromBtn.querySelector(".swap-symbol").textContent
-  }</span>`;
+  if (!fromBtn || !toBtn || !summary || !summaryAmt || !summaryFee) return;
+
+  const fromSymbol =
+    fromBtn.querySelector(".swap-symbol")?.textContent || "Token";
+  const toSymbol = toBtn.querySelector(".swap-symbol")?.textContent || "Token";
+
+  const summaryLeft = `${
+    mode === "buy" ? "Avg." : ""
+  } 1 <span>${toSymbol}</span>`;
+  const summaryRight = `${averagePrice} <span>${fromSymbol}</span>`;
 
   summaryAmt.innerHTML = `
       <button class="summary-btn" id="refreshBtn" type="button" aria-label="Refresh prices">
@@ -46,7 +50,7 @@ function fillSummary(averagePrice, fee, inputAmount, mode) {
   }
 }
 
-export function calculateTokenToSharesBuyInput() {
+function calculateTokenToSharesBuyInput() {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
 
@@ -57,7 +61,7 @@ export function calculateTokenToSharesBuyInput() {
   fillSummary(averagePrice, fee, tokenAmount, "buy");
 }
 
-export function calculateSharesToTokenBuyInput() {
+function calculateSharesToTokenBuyInput() {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
 
@@ -68,7 +72,7 @@ export function calculateSharesToTokenBuyInput() {
   fillSummary(averagePrice, fee, sharesToReceive, "buy");
 }
 
-export function calculateSharesToTokenSellInput() {
+function calculateSharesToTokenSellInput() {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
 
@@ -81,7 +85,7 @@ export function calculateSharesToTokenSellInput() {
   fillSummary(currentPrice, fee, sharesToReceive, "sell");
 }
 
-export function calculateTokenToSharesSellInput() {
+function calculateTokenToSharesSellInput() {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
 
@@ -157,7 +161,7 @@ function handleSyntax(e) {
 
   // Get the associated button
   const section = e.target.closest(".swap-section");
-  const button = section ? section.querySelector(".swap-asset-btn") : null;
+  const button = section.querySelector(".swap-asset-btn");
   const isButtonDisabled = button && button.classList.contains("disabled");
 
   if (isButtonDisabled) {
@@ -178,7 +182,26 @@ function handleSyntax(e) {
 
 function updatePlaceholder(input) {
   const section = input.closest(".swap-section");
-  const button = section ? section.querySelector(".swap-asset-btn") : null;
+  const button = section.querySelector(".swap-asset-btn");
   const isDisabled = button && button.classList.contains("disabled");
   input.placeholder = isDisabled ? "0.00" : "0";
+}
+
+export function handleCalculationOfInput(mode) {
+  if (mode === "buy") {
+    if (window.lastModifiedInput === "from") {
+      calculateTokenToSharesBuyInput();
+    } else if (window.lastModifiedInput === "to") {
+      calculateSharesToTokenBuyInput();
+    }
+  } else if (mode === "sell") {
+    if (window.lastModifiedInput === "from") {
+      calculateSharesToTokenSellInput();
+    } else if (window.lastModifiedInput === "to") {
+      calculateTokenToSharesSellInput();
+    }
+  }
+
+  updatePlaceholder(document.getElementById("fromAmount"));
+  updatePlaceholder(document.getElementById("toAmount"));
 }

@@ -1,9 +1,4 @@
-import {
-  calculateSharesToTokenBuyInput,
-  calculateSharesToTokenSellInput,
-  calculateTokenToSharesBuyInput,
-  calculateTokenToSharesSellInput,
-} from "../backend/handleInput.js";
+import { handleCalculationOfInput } from "../backend/handleInput.js";
 
 // UI State Management
 export function setupBuySellToggle() {
@@ -19,47 +14,51 @@ export function setupBuySellToggle() {
   const executeBtn = document.getElementById("executeBtn");
 
   function setMode(mode) {
+    const choice = window.defaultChoice || "Select Choice";
+
     if (mode === "buy") {
       toggle.classList.add("buy");
       toggle.classList.remove("sell");
       buyBtn.classList.add("active");
       sellBtn.classList.remove("active");
 
-      // Disable fromAsset button and hide its symbol
       fromAssetBtn.classList.add("disabled");
       fromAssetCaret.classList.add("hidden");
       fromAssetSym.textContent = "Token";
 
-      // Enable toAsset button and show its symbol
       toAssetBtn.classList.remove("disabled");
       toAssetCaret.classList.remove("hidden");
-      toAssetSym.textContent = window.defaultChoice;
+      toAssetSym.textContent = choice;
 
-      executeBtn.style.backgroundColor = "#28a745";
-      executeBtn.textContent = "Buy";
+      if (executeBtn) {
+        executeBtn.style.backgroundColor = "#28a745";
+        executeBtn.textContent = "Buy";
+      }
     } else {
       toggle.classList.add("sell");
       toggle.classList.remove("buy");
       sellBtn.classList.add("active");
       buyBtn.classList.remove("active");
 
-      // Enable fromAsset button and show its symbol
       fromAssetBtn.classList.remove("disabled");
       fromAssetCaret.classList.remove("hidden");
-      fromAssetSym.textContent = window.defaultChoice;
+      fromAssetSym.textContent = choice;
 
-      // Disable toAsset button and hide its symbol
       toAssetBtn.classList.add("disabled");
       toAssetCaret.classList.add("hidden");
       toAssetSym.textContent = "Token";
 
-      executeBtn.style.backgroundColor = "#dc3545";
-      executeBtn.textContent = "Sell";
+      if (executeBtn) {
+        executeBtn.style.backgroundColor = "#dc3545";
+        executeBtn.textContent = "Sell";
+      }
     }
-    // Refresh the exchange values and summary
-    // (true);
 
-    handleCalculationOfInput(mode);
+    try {
+      handleCalculationOfInput(mode);
+    } catch (err) {
+      console.error("💥 handleCalculationOfInput crashed:", err);
+    }
   }
 
   buyBtn.addEventListener("click", () => setMode("buy"));
@@ -67,20 +66,4 @@ export function setupBuySellToggle() {
 
   // Default to buy
   setMode("buy");
-}
-
-function handleCalculationOfInput(mode) {
-  if (mode === "buy") {
-    if (window.lastModifiedInput === "from") {
-      calculateTokenToSharesBuyInput();
-    } else if (window.lastModifiedInput === "to") {
-      calculateSharesToTokenBuyInput();
-    }
-  } else if (mode === "sell") {
-    if (window.lastModifiedInput === "from") {
-      calculateSharesToTokenSellInput();
-    } else if (window.lastModifiedInput === "to") {
-      calculateTokenToSharesSellInput();
-    }
-  }
 }

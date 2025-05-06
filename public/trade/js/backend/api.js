@@ -4,7 +4,7 @@ export async function fetchCurrentMarket(id, isRefresh, amountToBuy) {
   const res = await fetch(`/api/events/${id}/current_market`);
   const result = await res.json();
 
-  window.sharesData = result.ok ? result.shares_data : null;
+  window.sharesData = result.ok ? result.shares_data : {};
   window.bConstant = result.ok ? result.b_constant : 0;
 
   const params = new URLSearchParams(window.location.search);
