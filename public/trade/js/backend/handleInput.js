@@ -3,7 +3,10 @@ import {
   sellTokensToShares,
   buySharesToToken,
   buyTokenToShares,
+  calculateMarketPrices,
 } from "./calculations.js";
+
+import { startAutoRefresh } from "../main.js";
 
 function fillSummary(averagePrice, fee, inputAmount, mode) {
   const fromBtn = document.getElementById("fromAssetBtn");
@@ -47,6 +50,12 @@ function fillSummary(averagePrice, fee, inputAmount, mode) {
     updatePlaceholder(document.getElementById("toAmount"));
   } else {
     summary.classList.add("visible");
+
+    const refreshBtn = document.getElementById("refreshBtn");
+    refreshBtn.addEventListener("click", async () => {
+      console.log("Refreshing");
+      await startAutoRefresh();
+    });
   }
 }
 
@@ -81,7 +90,10 @@ function calculateSharesToTokenSellInput() {
 
   getInput.value = netRefund;
 
-  const currentPrice = window.currentPrice;
+  const defaultChoice = window.defaultChoice;
+  const currentPrices = calculateMarketPrices(defaultChoice, sharesToReceive);
+  const currentPrice = currentPrices[defaultChoice];
+
   fillSummary(currentPrice, fee, sharesToReceive, "sell");
 }
 
@@ -94,7 +106,10 @@ function calculateTokenToSharesSellInput() {
 
   spendInput.value = shares;
 
-  const currentPrice = window.currentPrice;
+  const defaultChoice = window.defaultChoice;
+  const currentPrices = calculateMarketPrices(defaultChoice, shares);
+  const currentPrice = currentPrices[defaultChoice];
+
   fillSummary(currentPrice, fee, tokenAmount, "sell");
 }
 
@@ -188,6 +203,18 @@ function updatePlaceholder(input) {
 }
 
 export function handleCalculationOfInput(mode) {
+  const spendInput = document.getElementById("fromAmount");
+  const getInput = document.getElementById("toAmount");
+
+  if (spendInput.value <= 0 || getInput.value <= 0) {
+    spendInput.value = "";
+    getInput.value = "";
+
+    updatePlaceholder(document.getElementById("fromAmount"));
+    updatePlaceholder(document.getElementById("toAmount"));
+    return;
+  }
+
   if (mode === "buy") {
     if (window.lastModifiedInput === "from") {
       calculateTokenToSharesBuyInput();

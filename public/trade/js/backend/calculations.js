@@ -1,9 +1,10 @@
 import Decimal from "https://cdn.jsdelivr.net/npm/decimal.js@10.4.3/+esm";
 
 export function calculateMarketPrices(choice, amountToBuy = 0) {
-  const shares = window.sharesData;
+  const originalShares = window.sharesData;
   const b = window.bConstant;
 
+  const shares = { ...originalShares };
   shares[choice] += amountToBuy;
 
   const expShares = {};

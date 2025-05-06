@@ -1,7 +1,13 @@
 import { calculateMarketPrices } from "./calculations.js";
 // API functionality
-export async function fetchCurrentMarket(id, isRefresh, amountToBuy) {
-  const res = await fetch(`/api/events/${id}/current_market`);
+export async function fetchCurrentMarket(isRefresh) {
+  const eventId = getEventIdFromQuery();
+  if (!eventId) {
+    document.getElementById("eventTitle").textContent = "No event ID provided.";
+    return;
+  }
+
+  const res = await fetch(`/api/events/${eventId}/current_market`);
   const result = await res.json();
 
   window.sharesData = result.ok ? result.shares_data : {};
@@ -22,7 +28,7 @@ export async function fetchCurrentMarket(id, isRefresh, amountToBuy) {
     );
   }
 
-  const currentPrices = calculateMarketPrices(defaultChoice, amountToBuy);
+  const currentPrices = calculateMarketPrices(defaultChoice);
 
   window.marketPrices = currentPrices;
 
@@ -32,7 +38,7 @@ export async function fetchCurrentMarket(id, isRefresh, amountToBuy) {
   return result;
 }
 
-export function getEventIdFromQuery() {
+function getEventIdFromQuery() {
   const params = new URLSearchParams(window.location.search);
   return params.get("event_id");
 }

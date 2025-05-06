@@ -16,6 +16,8 @@ export function setupBuySellToggle() {
   function setMode(mode) {
     const choice = window.defaultChoice || "Select Choice";
 
+    window.toggleMode = mode;
+
     if (mode === "buy") {
       toggle.classList.add("buy");
       toggle.classList.remove("sell");

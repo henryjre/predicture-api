@@ -1,24 +1,14 @@
 import { setupBuySellToggle } from "./frontend/ui.js";
 import { initModal } from "./frontend/modal.js";
 import { createChoiceSlide } from "./frontend/swiper.js";
-import {
-  fetchCurrentMarket,
-  getEventIdFromQuery,
-  updateUrlChoice,
-} from "./backend/api.js";
+import { fetchCurrentMarket, updateUrlChoice } from "./backend/api.js";
 import {
   handleInput,
   handleCalculationOfInput,
 } from "./backend/handleInput.js";
 
 async function loadEventTitle() {
-  const eventId = getEventIdFromQuery();
-  if (!eventId) {
-    document.getElementById("eventTitle").textContent = "No event ID provided.";
-    return;
-  }
-
-  const { ok, title, shares_data } = await fetchCurrentMarket(eventId);
+  const { ok, title, shares_data } = await fetchCurrentMarket();
   if (!ok) {
     console.error("Failed to fetch market");
     document.getElementById("eventTitle").textContent = "Failed to load event.";
@@ -67,6 +57,23 @@ async function loadEventTitle() {
   });
 }
 
+export async function startAutoRefresh() {
+  // Animate refresh icon
+  const refreshLoader = document.getElementById("receive-balance-loading");
+
+  refreshLoader.style.display = "block";
+
+  const result = await fetchCurrentMarket(true); // pass true to skip URL update
+
+  if (!result?.ok) return;
+
+  handleCalculationOfInput(window.toggleMode);
+
+  setTimeout(() => {
+    refreshLoader.style.display = "none";
+  }, 500);
+}
+
 // Initialize everything when DOM is loaded
 window.addEventListener("DOMContentLoaded", async () => {
   // Initialize modal first
@@ -74,13 +81,15 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   await loadEventTitle();
 
-  setTimeout(() => {
-    setupBuySellToggle();
+  setupBuySellToggle();
 
-    const fromInput = document.getElementById("fromAmount");
-    const toInput = document.getElementById("toAmount");
+  // setInterval(async () => {
+  //   await startAutoRefresh();
+  // }, 10000);
 
-    fromInput.addEventListener("input", handleInput);
-    toInput.addEventListener("input", handleInput);
-  }, 10);
+  const fromInput = document.getElementById("fromAmount");
+  const toInput = document.getElementById("toAmount");
+
+  fromInput.addEventListener("input", handleInput);
+  toInput.addEventListener("input", handleInput);
 });
