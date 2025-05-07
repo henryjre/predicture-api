@@ -111,11 +111,11 @@ export async function createUserRow(userId) {
 
     const insertRes = await pool.query(
       `
-      INSERT INTO users_data (user_id, user_hash, last_updated)
+      INSERT INTO users_data (user_id, hash, last_updated)
       VALUES ($1, $2, $3)
       ON CONFLICT (user_id) 
-      DO UPDATE SET user_hash = EXCLUDED.user_hash, last_updated = EXCLUDED.last_updated
-      RETURNING id, user_id, user_hash
+      DO UPDATE SET hash = EXCLUDED.hash, last_updated = EXCLUDED.last_updated
+      RETURNING id, user_id, hash
       `,
       [userId, hash, formattedDate]
     );
