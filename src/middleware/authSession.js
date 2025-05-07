@@ -18,7 +18,7 @@ function decodePayloadOnly(token) {
 }
 
 export function checkTimestamp(req, res, next) {
-  const token = req.headers["authorization"];
+  const token = req.query["mcp_token"];
 
   if (!token) {
     return res.redirect("/html/error/?id=5");
