@@ -2,8 +2,6 @@ import pool from "../database/db.js";
 import moment from "moment";
 import { decodeBase64Token } from "../utils/hash.js";
 
-const VALID_API_KEY = process.env.API_KEY;
-
 // Helper function to check if timestamp is more than 1 hour old
 function isOneHourAgo(unixTimestamp) {
   const oneHourAgo = moment().subtract(1, "hours");
@@ -14,13 +12,16 @@ function isOneHourAgo(unixTimestamp) {
 export const authenticateApiKey = (req, res, next) => {
   const apiKey = req.headers["x-api-key"]; // Use 'x-api-key' header
 
+  console.log("Received API Key:", apiKey);
+  console.log("Expected API Key:", process.env.API_KEY);
+
   if (!apiKey) {
     return res
       .status(401)
       .json({ message: "Unauthorized: No API key provided" });
   }
 
-  if (apiKey !== VALID_API_KEY) {
+  if (apiKey !== process.env.API_KEY) {
     return res.status(403).json({ message: "Forbidden: Invalid API key" });
   }
 
@@ -126,6 +127,9 @@ export const authenticateUser = async (req, res, next) => {
     req.user = { user_id: userId };
     next();
   } catch (err) {
-    return res.redirect(`/html/error?mcp_token=${mcp_token}`);
+    console.error(err);
+    return res.redirect(
+      `/html/error?id=5&mcp_token=${mcp_token}&signature=${signature}`
+    );
   }
 };
