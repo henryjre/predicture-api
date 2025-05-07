@@ -120,7 +120,7 @@ export async function createUserRow(userId) {
       [userId, hash, formattedDate]
     );
 
-    return { ok: true, data: insertRes.rows[0] };
+    return { ok: true, hash: hash };
   } catch (err) {
     console.error(err);
     return { ok: false, error: err, data: [] };

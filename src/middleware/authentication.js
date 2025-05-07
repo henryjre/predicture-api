@@ -29,8 +29,14 @@ export const authenticateApiKey = (req, res, next) => {
 
 export const authenticateUser = async (req, res, next) => {
   const { mcp_token } = req.query;
+  const sha256Hash = req.headers["x-signature"];
 
   if (!mcp_token) {
+    res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
+    return;
+  }
+
+  if (!sha256Hash) {
     res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
     return;
   }
@@ -52,16 +58,25 @@ export const authenticateUser = async (req, res, next) => {
     }
 
     const tokenTimestamp = decodedToken.ts;
-    const tokenTime = moment(tokenTimestamp);
+    const tokenTime = moment
+      .unix(decodedToken.exp)
+      .format("MMMM DD YYYY [at] h:mm A");
+
+    console.log(tokenTime);
 
     if (isOneHourAgo(tokenTimestamp)) {
       return res.redirect(`/html/error?id=6&mcp_token=${mcp_token}`);
     }
 
-    const query = "SELECT token FROM users_data WHERE user_id = $1";
+    const query = "SELECT token, hash FROM users_data WHERE user_id = $1";
     const result = await pool.query(query, [userId]);
 
     const token = result.rows[0].token;
+    const hash = result.rows[0].hash;
+
+    if (sha256Hash !== hash) {
+      return res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
+    }
 
     if (!token || token.length === 0) {
       // If no token found, update the token column with the current token

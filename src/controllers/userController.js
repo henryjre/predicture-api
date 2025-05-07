@@ -44,13 +44,14 @@ export async function createUserData(req, res) {
     const { user_id } = req.body;
 
     const result = await createUserRow(user_id);
+
     if (!result.ok) {
       return res
         .status(500)
         .json({ ok: false, error: result.error, hashString: "" });
     }
 
-    return res.json({ ok: true, hashString: result.data.user_hash });
+    return res.json({ ok: true, hashString: result.hash });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
