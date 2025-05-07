@@ -1,7 +1,7 @@
 import express from "express";
 import apiRouter from "./api/index.js";
 import { home } from "../controllers/homeController.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
+import { authenticateApiKey } from "../middleware/authMiddleware.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
