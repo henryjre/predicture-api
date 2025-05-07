@@ -66,13 +66,12 @@ export const authenticateUser = async (req, res, next) => {
     }
 
     const tokenTimestamp = decodedToken.ts;
-    const tokenTime = moment
+    const tokenTime = moment(tokenTimestamp);
+    const tokenTimeUnix = moment
       .unix(decodedToken.exp)
       .format("MMMM DD YYYY [at] h:mm A");
 
-    console.log(tokenTime);
-
-    if (isOneHourAgo(tokenTimestamp)) {
+    if (isOneHourAgo(tokenTimeUnix)) {
       return res.redirect(
         `/html/error?id=6&mcp_token=${mcp_token}&signature=${signature}`
       );
@@ -112,8 +111,6 @@ export const authenticateUser = async (req, res, next) => {
       next();
       return;
     }
-
-    console.log(tokenTime.isBefore(storedTokenTime));
 
     if (tokenTime.isBefore(storedTokenTime)) {
       return res.redirect(
