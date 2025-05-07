@@ -17,23 +17,23 @@ function decodeMcpToken(token) {
   }
 }
 
-// function checkTimestamp() {
-//   if (!token) {
-//     return res.redirect("/html/error/?id=5");
-//   }
+function checkTimestamp() {
+  if (!token) {
+    return res.redirect("/html/error/?id=5");
+  }
 
-//   const payload = decodeMcpToken(token);
+  const payload = decodeMcpToken(token);
 
-//   if (!payload || !payload.ts) {
-//     return res.redirect("/html/error/?id=2");
-//   }
+  if (!payload || !payload.ts) {
+    return res.redirect("/html/error/?id=2");
+  }
 
-//   const currentTime = Math.floor(Date.now() / 1000);
-//   const oneHourAgo = currentTime - 3600;
+  const currentTime = Math.floor(Date.now() / 1000);
+  const oneHourAgo = currentTime - 3600;
 
-//   if (payload.ts < oneHourAgo) {
-//     return res.redirect("/html/error/?id=1");
-//   }
+  if (payload.ts < oneHourAgo) {
+    return res.redirect("/html/error/?id=1");
+  }
 
-//   window.user_id = payload.user_id;
-// }
+  window.user_id = payload.user_id;
+}

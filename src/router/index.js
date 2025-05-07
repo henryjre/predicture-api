@@ -15,6 +15,13 @@ const router = express.Router();
 // Mount all API routes under /api
 router.use("/api", apiRouter);
 
+// Serve specific static routes with middleware
+router.use(
+  "/html/trade",
+  checkTimestamp,
+  express.static(path.join(__dirname, "public/trade"))
+);
+
 // Serve static files
 router.use(
   "/html",
