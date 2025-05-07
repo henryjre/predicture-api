@@ -28,15 +28,14 @@ export const authenticateApiKey = (req, res, next) => {
 };
 
 export const authenticateUser = async (req, res, next) => {
-  const { mcp_token } = req.query;
-  const sha256Hash = req.headers["x-signature"];
+  const { mcp_token, signature } = req.query;
 
   if (!mcp_token) {
     res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
     return;
   }
 
-  if (!sha256Hash) {
+  if (!signature) {
     res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
     return;
   }
@@ -74,7 +73,7 @@ export const authenticateUser = async (req, res, next) => {
     const token = result.rows[0].token;
     const hash = result.rows[0].hash;
 
-    if (sha256Hash !== hash) {
+    if (signature !== hash) {
       return res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
     }
 
