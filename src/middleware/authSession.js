@@ -16,7 +16,7 @@ const sessionStore = new Map();
 
 // Modified bindTokenToSession middleware
 export const bindTokenToSession = (req, res, next) => {
-  const token = req.query.mca_token;
+  const token = req.query.mcp_token;
 
   if (!token) {
     return res.status(400).send("No token provided");
