@@ -31,12 +31,16 @@ export const authenticateUser = async (req, res, next) => {
   const { mcp_token, signature } = req.query;
 
   if (!mcp_token) {
-    res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
+    res.redirect(
+      `/html/error?id=2&mcp_token=${mcp_token}&signature=${signature}`
+    );
     return;
   }
 
   if (!signature) {
-    res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
+    res.redirect(
+      `/html/error?id=2&mcp_token=${mcp_token}&signature=${signature}`
+    );
     return;
   }
 
@@ -45,14 +49,18 @@ export const authenticateUser = async (req, res, next) => {
     const decodedToken = decodeBase64Token(mcp_token);
 
     if (!decodedToken) {
-      res.redirect(`/html/error?id=5&mcp_token=${mcp_token}`);
+      res.redirect(
+        `/html/error?id=5&mcp_token=${mcp_token}&signature=${signature}`
+      );
       return;
     }
 
     const userId = decodedToken.sid;
 
     if (!userId) {
-      res.redirect(`/html/error?id=5&mcp_token=${mcp_token}`);
+      res.redirect(
+        `/html/error?id=5&mcp_token=${mcp_token}&signature=${signature}`
+      );
       return;
     }
 
@@ -64,7 +72,9 @@ export const authenticateUser = async (req, res, next) => {
     console.log(tokenTime);
 
     if (isOneHourAgo(tokenTimestamp)) {
-      return res.redirect(`/html/error?id=6&mcp_token=${mcp_token}`);
+      return res.redirect(
+        `/html/error?id=6&mcp_token=${mcp_token}&signature=${signature}`
+      );
     }
 
     const query = "SELECT token, hash FROM users_data WHERE user_id = $1";
@@ -74,7 +84,9 @@ export const authenticateUser = async (req, res, next) => {
     const hash = result.rows[0].hash;
 
     if (signature !== hash) {
-      return res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
+      return res.redirect(
+        `/html/error?id=2&mcp_token=${mcp_token}&signature=${signature}`
+      );
     }
 
     if (!token || token.length === 0) {
@@ -103,7 +115,9 @@ export const authenticateUser = async (req, res, next) => {
     console.log(tokenTime.isBefore(storedTokenTime));
 
     if (tokenTime.isBefore(storedTokenTime)) {
-      return res.redirect(`/html/error?id=6&mcp_token=${mcp_token}`);
+      return res.redirect(
+        `/html/error?id=6&mcp_token=${mcp_token}&signature=${signature}`
+      );
     }
 
     const updateQuery = "UPDATE users_data SET token = $1 WHERE user_id = $2";
