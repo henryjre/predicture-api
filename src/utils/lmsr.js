@@ -1,8 +1,8 @@
 // Get the constant b dynamically
-export function calculateDynamicB(shares, baseB = 100, k = 0.2) {
-  const totalShares = Object.values(shares).reduce((sum, q) => sum + q, 0);
-  return baseB + totalShares * k;
-}
+// export function calculateDynamicB(shares, baseB = 100, k = 0.2) {
+//   const totalShares = Object.values(shares).reduce((sum, q) => sum + q, 0);
+//   return baseB + totalShares * k;
+// }
 
 // Get the LMSR Cost
 function lmsrCost(shareMap, b) {

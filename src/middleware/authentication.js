@@ -1,5 +1,5 @@
 import pool from "../database/db.js";
-import moment from "moment-timezone";
+import moment from "moment";
 import { decodeBase64Token } from "../utils/hash.js";
 
 const VALID_API_KEY = process.env.API_KEY;
@@ -52,7 +52,7 @@ export const authenticateUser = async (req, res, next) => {
     }
 
     const tokenTimestamp = decodedToken.ts;
-    const tokenTime = moment(tokenTimestamp).tz("Asia/Manila");
+    const tokenTime = moment(tokenTimestamp);
 
     if (isOneHourAgo(tokenTimestamp)) {
       return res.redirect(`/html/error?id=6&mcp_token=${mcp_token}`);
@@ -77,7 +77,7 @@ export const authenticateUser = async (req, res, next) => {
     const storedDecoded = decodeBase64Token(storedToken);
     const storedTimestamp = storedDecoded.ts;
 
-    const storedTokenTime = moment(storedTimestamp).tz("Asia/Manila");
+    const storedTokenTime = moment(storedTimestamp);
 
     // If tokens match
     if (mcp_token === storedToken) {
