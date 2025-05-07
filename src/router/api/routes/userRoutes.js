@@ -13,4 +13,8 @@ router.get("/positions/open/:userId", openPositions);
 // GET /api/user/positions/open/:userId
 router.get("/market_data", getUserMarketData);
 
+router.get("/error", (req, res) => {
+  res.status(404).json({ ok: false, message: "Invalid request." });
+});
+
 export default router;
