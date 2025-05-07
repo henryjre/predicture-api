@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit";
+import path from "path";
 
 export const dynamicLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
