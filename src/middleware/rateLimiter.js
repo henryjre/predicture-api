@@ -1,13 +1,22 @@
 import rateLimit from "express-rate-limit";
 
-// 15-minute window, 100 requests per IP
-export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+export const dynamicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: (req) => {
+    const extension = path.extname(req.path);
+    if (extension === ".jpg" || extension === ".png") {
+      return 50; // Lower limit for images
+    }
+    return 100;
+  },
+  message: "Rate limit exceeded. Try again later.",
+});
+
+export const tradeRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Max 5 requests per minute per IP
   message: {
     status: 429,
-    message: "Too many requests. Please try again later.",
+    message: "Too many trades. Please try again later.",
   },
-  standardHeaders: true, // Return rate limit info in headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });

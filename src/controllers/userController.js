@@ -37,8 +37,6 @@ export async function getUserMarketData(req, res) {
 
 export async function createUserData(req, res) {
   try {
-    const clientIp = req.headers["x-forwarded-for"] || req.ip;
-    res.json({ ok: true, ip: clientIp });
     const { user_id } = req.body;
 
     const result = await createUserRow(user_id);
