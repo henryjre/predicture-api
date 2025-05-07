@@ -86,6 +86,8 @@ export const authenticateUser = async (req, res, next) => {
       return;
     }
 
+    console.log(tokenTime.isBefore(storedTokenTime));
+
     if (tokenTime.isBefore(storedTokenTime)) {
       return res.redirect(`/html/error?id=6&mcp_token=${mcp_token}`);
     }

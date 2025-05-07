@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadEventTitle();
 
   setupBuySellToggle();
-  displayUserMarketData();
+  await displayUserMarketData();
 
   // setInterval(async () => {
   //   await startAutoRefresh();
