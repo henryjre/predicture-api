@@ -4,7 +4,7 @@ import { createUserData } from "../../../controllers/userController.js";
 
 const router = express.Router();
 
-// POST /api/users/create
-router.get("/create", createUserData);
+// POST /api/private/createUserData
+router.post("/createUserData", createUserData);
 
 export default router;
