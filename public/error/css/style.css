@@ -1,0 +1,291 @@
+/* ──────────────────────────────────────────────────────────────────────────────
+   1. VARIABLES & RESET
+──────────────────────────────────────────────────────────────────────────────── */
+:root {
+  --light-blue: #d8efff;
+  --white-blue: #f9f8f8;
+  --regular-blue: #3062f7;
+  --dark-blue: #001b70;
+  --dark-blue-light: #1a2a80;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--light-blue);
+  color: var(--dark-blue);
+  position: relative;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   2. GLOBAL LAYOUT
+──────────────────────────────────────────────────────────────────────────────── */
+header {
+  background-color: var(--dark-blue);
+  padding: 0.5rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin: 0;
+}
+
+.header-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.logo {
+  height: 2rem;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   3. ERROR PAGE STYLES
+──────────────────────────────────────────────────────────────────────────────── */
+.error-content {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.error-graphic {
+  margin-bottom: 2rem;
+}
+
+.error-graphic svg {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.error-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--dark-blue);
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  font-size: 1.1rem;
+  color: var(--dark-blue);
+  opacity: 0.8;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.error-button {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--regular-blue);
+  border: none;
+  border-radius: 16px;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.error-button:hover {
+  background: var(--dark-blue);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   4. FOOTER STYLES
+──────────────────────────────────────────────────────────────────────────────── */
+footer {
+  background-color: var(--dark-blue);
+  color: var(--white-blue);
+  padding: 2rem 0;
+  margin-top: auto;
+}
+
+.footer-container {
+  margin: 0 2rem;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 600px;
+}
+
+.footer-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  height: 70px;
+}
+
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.social-link {
+  color: var(--white-blue);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s ease;
+}
+
+.social-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.social-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+.footer-copyright {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   5. RESPONSIVE STYLES
+──────────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  main {
+    padding: 4rem 1rem;
+  }
+
+  .error-content {
+    padding: 3rem 1.5rem;
+    margin: 1rem;
+  }
+
+  .error-title {
+    font-size: 1.5rem;
+  }
+
+  .error-message {
+    font-size: 1rem;
+  }
+
+  .footer-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 0;
+  }
+
+  .footer-left {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: left;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .footer-logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .footer-text {
+    height: auto;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .footer-right {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .footer-meta {
+    align-items: center;
+    text-align: center;
+  }
+}

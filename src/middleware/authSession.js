@@ -1,87 +1,41 @@
-import jwt from "jsonwebtoken";
+import path from "path";
 
-function decodeToken(token) {
+function decodeBase64Url(base64Url) {
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  return Buffer.from(base64, "base64").toString("utf8");
+}
+
+function decodePayloadOnly(token) {
   try {
-    const decoded = jwt.decode(token, { complete: true });
-    console.log("Decoded Payload:", decoded.payload);
-    return decoded.payload;
-  } catch (err) {
-    console.error("Failed to decode token:", err.message);
+    const [payload] = token.split(".");
+    if (!payload) throw new Error("Invalid structure.");
+
+    const decodedPayload = decodeBase64Url(payload);
+    return JSON.parse(decodedPayload);
+  } catch {
     return null;
   }
 }
 
-// Session store setup (in-memory for example, use Redis in production)
-const sessionStore = new Map();
-
-// Modified bindTokenToSession middleware
-export const bindTokenToSession = (req, res, next) => {
-  const token = req.query.mcp_token;
+export function checkTimestamp(req, res, next) {
+  const token = req.headers["authorization"];
 
   if (!token) {
-    return res.status(400).send("No token provided");
+    return res.redirect("/html/error/?id=5");
   }
 
-  try {
-    const decoded = decodeToken(token);
+  const payload = decodePayloadOnly(token);
 
-    // Check if token was already used (prevent replay)
-    if (sessionStore.has(decoded.ax)) {
-      return res.status(403).send("Token already used");
-    }
-
-    // Store token info
-    req.session.userId = decoded.sid;
-    req.session.tokenId = decoded.ax;
-    req.session.originalIp = req.ip; // Store the initial IP
-
-    // Register token as used
-    sessionStore.set(decoded.ax, {
-      userId: decoded.sid,
-      ip: req.ip,
-      expiresAt: Date.now() + 30 * 60 * 1000, // 30 min expiration
-    });
-
-    next();
-  } catch (err) {
-    console.error("Token verification failed:", err);
-    res.status(401).send("Invalid token");
-  }
-};
-
-// Enhanced validateSession middleware
-export const validateSession = (req, res, next) => {
-  if (!req.session.userId || !req.session.tokenId) {
-    return res.status(403).send("Session expired. Please reauthenticate.");
+  if (!payload || !payload.ts) {
+    return res.redirect("/html/error/?id=2");
   }
 
-  // Check IP consistency (allow some proxies with X-Forwarded-For)
-  const currentIp = req.ip;
-  const originalIp = req.session.originalIp;
+  const currentTime = Math.floor(Date.now() / 1000);
+  const oneHourAgo = currentTime - 3600;
 
-  // Simple IP comparison (expand for production use)
-  if (currentIp !== originalIp) {
-    console.warn(`IP mismatch for user ${req.session.userId}`);
-    return res
-      .status(403)
-      .send("Session location changed. Please reauthenticate.");
-  }
-
-  // Check token is still valid in our store
-  const tokenInfo = sessionStore.get(req.session.tokenId);
-  if (!tokenInfo || tokenInfo.expiresAt < Date.now()) {
-    return res.status(403).send("Session expired.");
+  if (payload.ts < oneHourAgo) {
+    return res.redirect("/html/error/?id=1");
   }
 
   next();
-};
-
-// Cleanup expired sessions periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [jti, data] of sessionStore) {
-    if (data.expiresAt < now) {
-      sessionStore.delete(jti);
-    }
-  }
-}, 60 * 60 * 1000); // Run hourly
+}

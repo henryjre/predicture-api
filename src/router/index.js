@@ -5,10 +5,7 @@ import { authenticateApiKey } from "../middleware/authCalls.js";
 import { dynamicLimiter } from "../middleware/rateLimiter.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import {
-  bindTokenToSession,
-  validateSession,
-} from "../middleware/authSession.js";
+import { checkTimestamp } from "../middleware/authSession.js";
 // emulate __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,12 +15,22 @@ const router = express.Router();
 // Mount all API routes under /api
 router.use("/api", apiRouter);
 
+// Serve specific static routes with middleware
+router.use(
+  "/html/trade",
+  checkTimestamp,
+  express.static(path.join(__dirname, "public/trade"))
+);
+router.use(
+  "/html/charts",
+  checkTimestamp,
+  express.static(path.join(__dirname, "public/charts"))
+);
+
 // Serve static files
 router.use(
   "/html",
   dynamicLimiter,
-  bindTokenToSession,
-  validateSession,
   express.static(path.join(__dirname, "../../public"))
 );
 
