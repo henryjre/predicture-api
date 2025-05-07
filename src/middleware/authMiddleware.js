@@ -1,20 +1,18 @@
 // src/middleware/auth.js
-import jwt from "jsonwebtoken";
+const VALID_API_KEY = process.env.API_KEY;
 
-const JWT_SECRET = process.env.JWT_SECRET;
+export const authenticateApiKey = (req, res, next) => {
+  const apiKey = req.headers["x-api-key"]; // Use 'x-api-key' header
 
-export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader?.split(" ")[1]; // Format: "Bearer <token>"
-
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized: No token" });
+  if (!apiKey) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized: No API key provided" });
   }
 
-  try {
-    jwt.verify(token, JWT_SECRET); // Verify token
-    next(); // Pass control to route
-  } catch {
-    return res.status(403).json({ message: "Forbidden: Invalid token" });
+  if (apiKey !== VALID_API_KEY) {
+    return res.status(403).json({ message: "Forbidden: Invalid API key" });
   }
+
+  next();
 };
