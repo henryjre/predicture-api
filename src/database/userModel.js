@@ -1,7 +1,7 @@
 import moment from "moment-timezone";
 import pool from "./db.js";
 import { calculateMarketPrices } from "../utils/lmsr.js";
-
+import { generateHash } from "../utils/hash.js";
 export async function getUserDbData(userId) {
   const res = await pool.query("SELECT * FROM users_data WHERE user_id = $1", [
     userId,
