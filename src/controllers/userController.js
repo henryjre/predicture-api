@@ -56,3 +56,12 @@ export async function createUserData(req, res) {
     });
   }
 }
+
+export async function samplePost(req, res) {
+  try {
+    return res.json({ ok: true, message: "Hello, world!" });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ ok: false, message: "Failed to fetch." });
+  }
+}
