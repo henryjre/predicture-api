@@ -91,7 +91,7 @@ function calculateSharesToTokenSellInput() {
   getInput.value = netRefund;
 
   const defaultChoice = window.defaultChoice;
-  const currentPrices = calculateMarketPrices(defaultChoice, sharesToReceive);
+  const currentPrices = calculateMarketPrices(defaultChoice, -sharesToReceive);
   const currentPrice = currentPrices[defaultChoice];
 
   fillSummary(currentPrice, fee, sharesToReceive, "sell");
@@ -107,7 +107,7 @@ function calculateTokenToSharesSellInput() {
   spendInput.value = shares;
 
   const defaultChoice = window.defaultChoice;
-  const currentPrices = calculateMarketPrices(defaultChoice, shares);
+  const currentPrices = calculateMarketPrices(defaultChoice, -shares);
   const currentPrice = currentPrices[defaultChoice];
 
   fillSummary(currentPrice, fee, tokenAmount, "sell");
