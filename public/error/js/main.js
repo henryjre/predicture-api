@@ -29,6 +29,11 @@ const errorMessages = {
     message:
       "Your access token has expired. Please try again with a new token.",
   },
+  7: {
+    title: "Session Time Limit",
+    message:
+      "Your session has been active for more than an hour. Please refresh your access.",
+  },
 };
 
 // Get error code from URL query parameters

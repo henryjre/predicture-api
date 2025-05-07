@@ -4,6 +4,13 @@ import { decodeBase64Token } from "../utils/hash.js";
 
 const VALID_API_KEY = process.env.API_KEY;
 
+// Helper function to check if timestamp is more than 1 hour old
+function isOneHourAgo(unixTimestamp) {
+  const oneHourAgo = moment().subtract(1, "hours");
+  const timestamp = moment.unix(unixTimestamp);
+  return timestamp.isBefore(oneHourAgo);
+}
+
 export const authenticateApiKey = (req, res, next) => {
   const apiKey = req.headers["x-api-key"]; // Use 'x-api-key' header
 
@@ -24,7 +31,7 @@ export const authenticateUser = async (req, res, next) => {
   const { mcp_token } = req.query;
 
   if (!mcp_token) {
-    res.redirect("/html/error?id=2");
+    res.redirect(`/html/error?id=2&mcp_token=${mcp_token}`);
     return;
   }
 
@@ -33,16 +40,22 @@ export const authenticateUser = async (req, res, next) => {
     const decodedToken = decodeBase64Token(mcp_token);
 
     if (!decodedToken) {
-      res.redirect("/html/error?id=5");
+      res.redirect(`/html/error?id=5&mcp_token=${mcp_token}`);
       return;
     }
 
     const userId = decodedToken.sid;
-    const tokenTimestamp = decodedToken.ts;
 
     if (!userId) {
-      res.redirect("/html/error?id=5");
+      res.redirect(`/html/error?id=5&mcp_token=${mcp_token}`);
       return;
+    }
+
+    const tokenTimestamp = decodedToken.ts;
+    const tokenTime = moment(tokenTimestamp).tz("Asia/Manila");
+
+    if (isOneHourAgo(tokenTimestamp)) {
+      return res.redirect(`/html/error?id=6&mcp_token=${mcp_token}`);
     }
 
     const query = "SELECT token FROM users_data WHERE user_id = $1";
@@ -64,11 +77,17 @@ export const authenticateUser = async (req, res, next) => {
     const storedDecoded = decodeBase64Token(storedToken);
     const storedTimestamp = storedDecoded.ts;
 
-    const tokenTime = moment(tokenTimestamp).tz("Asia/Manila");
     const storedTokenTime = moment(storedTimestamp).tz("Asia/Manila");
 
+    // If tokens match
+    if (mcp_token === storedToken) {
+      req.user = { user_id: userId };
+      next();
+      return;
+    }
+
     if (tokenTime.isBefore(storedTokenTime)) {
-      return res.redirect("/html/error?id=6");
+      return res.redirect(`/html/error?id=6&mcp_token=${mcp_token}`);
     }
 
     const updateQuery = "UPDATE users_data SET token = $1 WHERE user_id = $2";
@@ -77,6 +96,6 @@ export const authenticateUser = async (req, res, next) => {
     req.user = { user_id: userId };
     next();
   } catch (err) {
-    return res.redirect("/html/error");
+    return res.redirect(`/html/error?mcp_token=${mcp_token}`);
   }
 };

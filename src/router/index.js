@@ -17,16 +17,16 @@ const router = express.Router();
 // Mount all API routes under /api
 router.use("/api", apiRouter);
 
+// Serve the main trade page with authentication
+router.get("/html/trade", dynamicLimiter, authenticateUser, (req, res) => {
+  res.sendFile(path.join(__dirname, "../../public/trade/index.html"));
+});
+
 // Serve static files for trade without authentication
 router.use(
   "/html/trade",
   express.static(path.join(__dirname, "../../public/trade"))
 );
-
-// Serve the main trade page with authentication
-router.get("/html/trade", dynamicLimiter, authenticateUser, (req, res) => {
-  res.sendFile(path.join(__dirname, "../../public/trade/index.html"));
-});
 
 // Serve static files
 router.use("/html", express.static(path.join(__dirname, "../../public")));
