@@ -54,6 +54,8 @@ export function updateUrlChoice(choice) {
 }
 
 export async function fetchUserMarketData(userId) {
+  const eventId = getEventIdFromQuery();
+
   const res = await fetch(
     `/api/users/market_data?user_id=${userId}&event_id=${eventId}`
   );

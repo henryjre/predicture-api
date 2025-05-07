@@ -6,6 +6,7 @@ import {
   handleInput,
   handleCalculationOfInput,
 } from "./backend/handleInput.js";
+import { displayUserMarketData } from "./backend/user.js";
 
 async function loadEventTitle() {
   const { ok, title, shares_data } = await fetchCurrentMarket();
@@ -73,15 +74,15 @@ export async function startAutoRefresh() {
     refreshLoader.style.display = "none";
   }, 500);
 }
-
 // Initialize everything when DOM is loaded
-window.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // Initialize modal first
   initModal();
 
   await loadEventTitle();
 
   setupBuySellToggle();
+  displayUserMarketData();
 
   // setInterval(async () => {
   //   await startAutoRefresh();

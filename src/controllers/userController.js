@@ -2,8 +2,10 @@
 import {
   createUserRow,
   getOpenPositions,
+  getOpenPositionsByEvent,
   getUserDbData,
 } from "../database/userModel.js";
+import { decodeBase64Token } from "../utils/hash.js";
 
 export async function openPositions(req, res) {
   try {
@@ -18,11 +20,13 @@ export async function openPositions(req, res) {
 
 export async function getUserMarketData(req, res) {
   try {
-    const { user_id, event_id } = req.params;
+    const { user_id, event_id } = req.body;
+
     const user_data = await getUserDbData(user_id);
     const open_positions = await getOpenPositionsByEvent(user_data, event_id);
 
     const data = {
+      ok: true,
       id: user_data.user_id,
       balance: user_data.balance,
       openPositions: open_positions,
@@ -31,7 +35,7 @@ export async function getUserMarketData(req, res) {
     res.json(data);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch user market data." });
+    res.status(500).json({ ok: false, error: err.message });
   }
 }
 
@@ -46,10 +50,10 @@ export async function createUserData(req, res) {
         .json({ ok: false, error: result.error, hashString: "" });
     }
 
-    res.json({ ok: true, hashString: result.data.user_hash });
+    return res.json({ ok: true, hashString: result.data.user_hash });
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    return res.status(500).json({
       ok: false,
       error: "Failed to create user data.",
       hashString: "",

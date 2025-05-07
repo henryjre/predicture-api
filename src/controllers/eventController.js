@@ -2,7 +2,7 @@ import {
   calculatePurchaseCost,
   calculateMarketPrices,
   calculateSellPayout,
-  calculateDynamicB,
+  // calculateDynamicB,
 } from "../utils/lmsr.js";
 import pool from "../database/db.js";
 
@@ -24,7 +24,7 @@ export async function eventReceive(req, res) {
 }
 
 async function buyEvent(req, res) {
-  const { user_id, event_id, action, shares, choice, b_received } = req.body;
+  const { user_id, event_id, action, shares, choice, b_constant } = req.body;
 
   const client = await pool.connect();
 
@@ -44,33 +44,29 @@ async function buyEvent(req, res) {
     const event = eventRes.rows[0];
 
     const shares_data = event.shares_data;
-    const currentB = calculateDynamicB(shares_data, b_received);
 
     // Calculate market before the update
-    const marketBefore = calculateMarketPrices(shares_data, currentB);
+    const marketBefore = calculateMarketPrices(shares_data, b_constant);
 
     // Compute cost and new shares
     const { rawCost, fee, cost, newShares } = calculatePurchaseCost(
       shares_data,
-      currentB,
+      b_constant,
       choice,
       shares
     );
-
-    const newB = calculateDynamicB(newShares, b_received);
 
     // Update the locked row with new shares
     await client.query(
       `UPDATE events
          SET shares_data  = $1,
              rewards_pool = rewards_pool + $3,
-             fees_collected = fees_collected + $4,
-             b_constant = $5
+             fees_collected = fees_collected + $4
        WHERE event_id = $2`,
-      [newShares, event_id, rawCost, fee, newB]
+      [newShares, event_id, rawCost, fee]
     );
 
-    const marketAfter = calculateMarketPrices(newShares, newB);
+    const marketAfter = calculateMarketPrices(newShares, b_constant);
 
     await client.query(
       `INSERT INTO trade_history (event_id, prices, shares_bought, raw_cost)
@@ -122,7 +118,7 @@ async function buyEvent(req, res) {
 }
 
 async function sellEvent(req, res) {
-  const { user_id, event_id, shares, choice, b_received } = req.body;
+  const { user_id, event_id, shares, choice, b_constant } = req.body;
 
   const client = await pool.connect();
 
@@ -149,30 +145,26 @@ async function sellEvent(req, res) {
       );
     }
 
-    const currentB = calculateDynamicB(newShares, b_received);
-
-    const marketBefore = calculateMarketPrices(shares_data, currentB);
+    const marketBefore = calculateMarketPrices(shares_data, b_constant);
 
     const { rawPayout, fee, payout, newShares } = calculateSellPayout(
       shares_data,
-      currentB,
+      b_constant,
       choice,
       shares
     );
 
-    const newB = calculateDynamicB(newShares, b_received);
     // Update the pool
     await client.query(
       `UPDATE events
          SET shares_data   = $1,
              rewards_pool  = rewards_pool - $3,
-             fees_collected = fees_collected + $4,
-             b_constant = $5
+             fees_collected = fees_collected + $4
        WHERE event_id = $2`,
-      [newShares, event_id, rawPayout, fee, newB]
+      [newShares, event_id, rawPayout, fee]
     );
 
-    const marketAfter = calculateMarketPrices(newShares, newB);
+    const marketAfter = calculateMarketPrices(newShares, b_constant);
 
     await client.query(
       `INSERT INTO trade_history (event_id, prices, shares_bought, raw_cost)

@@ -24,6 +24,11 @@ const errorMessages = {
     message:
       "This link appears to be broken or has expired. Please request a new link.",
   },
+  6: {
+    title: "Access Token Expired",
+    message:
+      "Your access token has expired. Please try again with a new token.",
+  },
 };
 
 // Get error code from URL query parameters

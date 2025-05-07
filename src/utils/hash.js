@@ -18,3 +18,22 @@ export function validateHash(hash1, hash2) {
     return false;
   }
 }
+
+//////
+
+export function decodeBase64Token(token) {
+  try {
+    const [payload] = token.split(".");
+    if (!payload) throw new Error("Invalid structure.");
+
+    const decodedPayload = decodeBase64Url(payload);
+    return JSON.parse(decodedPayload);
+  } catch {
+    return null;
+  }
+
+  function decodeBase64Url(base64Url) {
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    return Buffer.from(base64, "base64").toString("utf8");
+  }
+}

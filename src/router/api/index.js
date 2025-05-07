@@ -2,6 +2,7 @@ import { Router } from "express";
 import eventRoutes from "./routes/eventRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import privateRoutes from "./routes/privateRoutes.js";
+import { authenticateUser } from "../../middleware/authentication.js";
 
 const router = Router();
 
@@ -9,7 +10,7 @@ const router = Router();
 router.use("/events", eventRoutes);
 
 // /api/users/*
-router.use("/users", userRoutes);
+router.use("/users", authenticateUser, userRoutes);
 
 // /api/private/*
 router.use("/private", privateRoutes);
