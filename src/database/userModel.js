@@ -1,3 +1,4 @@
+import moment from "moment-timezone";
 import pool from "./db.js";
 import { calculateMarketPrices } from "../utils/lmsr.js";
 
@@ -97,4 +98,31 @@ export async function getOpenPositions(userId) {
   }
 
   return positions;
+}
+
+export async function createUserRow(userId) {
+  try {
+    const currentDate = moment.tz("Asia/Manila");
+    const formattedDate = currentDate.format();
+    const unix = currentDate.valueOf();
+
+    const hashString = `${userId}-${process.env.HASH_SECRET}-${unix}`;
+    const hash = generateHash(hashString);
+
+    const insertRes = await pool.query(
+      `
+      INSERT INTO users_data (user_id, user_hash, last_updated)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (user_id) 
+      DO UPDATE SET user_hash = EXCLUDED.user_hash, last_updated = EXCLUDED.last_updated
+      RETURNING id, user_id, user_hash
+      `,
+      [userId, hash, formattedDate]
+    );
+
+    return { ok: true, data: insertRes.rows[0] };
+  } catch (err) {
+    console.error(err);
+    return { ok: false, error: err, data: [] };
+  }
 }

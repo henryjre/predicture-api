@@ -1,5 +1,9 @@
 // controllers/userPositionsController.js
-import { getOpenPositions, getUserDbData } from "../database/userModel.js";
+import {
+  createUserRow,
+  getOpenPositions,
+  getUserDbData,
+} from "../database/userModel.js";
 
 export async function openPositions(req, res) {
   try {
@@ -28,5 +32,29 @@ export async function getUserMarketData(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch user market data." });
+  }
+}
+
+export async function createUserData(req, res) {
+  try {
+    const clientIp = req.headers["x-forwarded-for"] || req.ip;
+    res.json({ ok: true, ip: clientIp });
+    const { user_id } = req.body;
+
+    const result = await createUserRow(user_id);
+    if (!result.ok) {
+      return res
+        .status(500)
+        .json({ ok: false, error: result.error, hashString: "" });
+    }
+
+    res.json({ ok: true, hashString: result.data.user_hash });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      ok: false,
+      error: "Failed to create user data.",
+      hashString: "",
+    });
   }
 }
