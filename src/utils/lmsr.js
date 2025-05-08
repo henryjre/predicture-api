@@ -1,3 +1,5 @@
+import Decimal from "decimal.js";
+
 // Get the constant b dynamically
 // export function calculateDynamicB(shares, baseB = 100, k = 0.2) {
 //   const totalShares = Object.values(shares).reduce((sum, q) => sum + q, 0);
@@ -27,15 +29,15 @@ export function calculatePurchaseCost(
 
   const costBefore = lmsrCost(qBefore, b);
   const costAfter = lmsrCost(qAfter, b);
-  const rawCost = costAfter - costBefore;
+  const rawCost = new Decimal(costAfter - costBefore);
 
-  const fee = rawCost * feeRate;
-  const totalCost = rawCost + fee;
+  const fee = rawCost.times(feeRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const totalCost = rawCost.plus(fee).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   return {
-    rawCost: parseFloat(rawCost.toFixed(2)),
-    fee: parseFloat(fee.toFixed(2)),
-    cost: parseFloat(totalCost.toFixed(2)), // Final amount user pays
+    rawCost: Number(rawCost.toDecimalPlaces(2, Decimal.ROUND_HALF_UP)),
+    fee: Number(fee),
+    cost: Number(totalCost), // Final amount user pays
     newShares: qAfter,
   };
 }
@@ -63,15 +65,19 @@ export function calculateSellPayout(
 
   const costBefore = lmsrCost(qBefore, b);
   const costAfter = lmsrCost(qAfter, b);
-  const rawPayout = costBefore - costAfter;
+  const rawPayout = new Decimal(costBefore - costAfter);
 
-  const fee = rawPayout * feeRate;
-  const totalPayout = rawPayout - fee;
+  const fee = rawPayout
+    .times(feeRate)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const totalPayout = rawPayout
+    .minus(fee)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   return {
-    rawPayout: parseFloat(rawPayout.toFixed(2)),
-    fee: parseFloat(fee.toFixed(2)),
-    payout: parseFloat(totalPayout.toFixed(2)), // Final amount user receives
+    rawPayout: Number(rawPayout.toDecimalPlaces(2, Decimal.ROUND_HALF_UP)),
+    fee: Number(fee),
+    payout: Number(totalPayout), // Final amount user receives
     newShares: qAfter,
   };
 }
@@ -91,7 +97,9 @@ export function calculateMarketPrices(shares, b) {
   // Step 2: Normalize to get probabilities
   const prices = {};
   for (const [key, expVal] of Object.entries(expShares)) {
-    prices[key] = parseFloat((expVal / sumExp).toFixed(4)); // Rounded to 4 decimals
+    prices[key] = Number(
+      new Decimal(expVal / sumExp).toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+    ); // Rounded to 4 decimals
   }
 
   return prices;
