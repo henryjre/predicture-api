@@ -28,8 +28,6 @@ export async function getOpenPositionsByEvent(userId, eventId) {
     [userId, eventId]
   );
 
-  console.log(rows);
-
   return rows.reduce((acc, r) => {
     acc[r.choice] = Number(r.shares);
     return acc;
