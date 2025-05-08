@@ -1,6 +1,7 @@
 import moment from "moment";
 import { decodeBase64Token } from "../utils/hash.js";
 import jwt from "jsonwebtoken";
+import pool from "../database/db.js";
 
 // Helper function to check if timestamp is more than 1 hour old
 function isOneHourAgo(unixTimestamp) {
@@ -25,7 +26,7 @@ export const authenticateApiKey = (req, res, next) => {
   next();
 };
 
-export const authenticateUser = (req, res, next) => {
+export const authenticateUser = async (req, res, next) => {
   const { mcp_token, user_token } = req.query;
 
   console.log("Received tokens:", { user_token, mcp_token });
@@ -67,7 +68,7 @@ export const authenticateUser = (req, res, next) => {
       );
     }
 
-    const decodedJwtToken = jwt.verify(user_token, process.env.HASH_SECRET);
+    const decodedJwtToken = jwt.verify(user_token, process.env.JWT_SECRET);
     const { uid, iat } = decodedJwtToken;
 
     if (String(uid) !== String(decodedMcpToken.sid)) {
@@ -85,12 +86,29 @@ export const authenticateUser = (req, res, next) => {
       );
     }
 
-    const oneHourAgo = Date.now() - 3600 * 1000;
+    const ipAddress = req.ip || "0.0.0.0";
 
-    if (iat < oneHourAgo) {
-      console.log("Token expired (1 hour)");
+    // Database Check: Verify the token in the database
+    const query = `
+      SELECT token, ip_address, date_created 
+      FROM jwt_tokens 
+      WHERE user_id = $1;
+    `;
+
+    const { rows } = await pool.query(query, [uid]);
+    const { token, ip_address, date_created } = rows[0];
+
+    if (token !== user_token) {
+      console.log("JWT mismatch");
       return res.redirect(
-        `/html/error?id=6&mcp_token=${mcp_token}&user_token=${user_token}`
+        `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
+      );
+    }
+
+    if (ip_address !== ipAddress) {
+      console.log("IP mismatch");
+      return res.redirect(
+        `/html/error?id=2&mcp_token=${mcp_token}&user_token=${user_token}`
       );
     }
 

@@ -46,17 +46,17 @@ export function createJwtToken(user_id) {
 
   const issuedAt = Date.now();
 
-  if (!process.env.HASH_SECRET) {
-    throw new Error("HASH_SECRET environment variable is not set");
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is not set");
   }
 
   const jwtToken = jwt.sign(
     { uid: user_id, iat: issuedAt },
-    process.env.HASH_SECRET,
+    process.env.JWT_SECRET,
     {
       expiresIn: "1h",
     }
   );
 
-  return jwtToken;
+  return { jwtToken, issuedAt };
 }

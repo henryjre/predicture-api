@@ -1,3 +1,5 @@
+import pool from "../database/db.js";
+
 // controllers/userPositionsController.js
 import {
   createUserRow,
@@ -62,11 +64,32 @@ export async function createUserData(req, res) {
 export async function rotateToken(req, res) {
   try {
     const { user_id } = req.body;
-    const jwtToken = createJwtToken(user_id);
+
+    if (!user_id) {
+      return res.status(400).json({ ok: false, error: "User ID is required" });
+    }
+
+    const { jwtToken, issuedAt } = createJwtToken(user_id);
+
+    const iat = new Date(issuedAt);
+    const ipAddress = req.ip || "0.0.0.0";
+
+    const query = `
+      INSERT INTO jwt_tokens (user_id, token, ip_address, date_created) 
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (user_id) 
+      DO UPDATE SET 
+        token = EXCLUDED.token,
+        ip_address = EXCLUDED.ip_address,
+        date_created = EXCLUDED.date_created
+      RETURNING *;
+    `;
+
+    await pool.query(query, [user_id, jwtToken, ipAddress, iat]);
 
     res.json({ ok: true, jwt: jwtToken });
   } catch (err) {
-    console.error(err);
+    console.error("Error in rotateToken:", err.message);
     res.status(500).json({ ok: false, error: err.message });
   }
 }
