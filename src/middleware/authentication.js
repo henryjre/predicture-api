@@ -49,22 +49,6 @@ export const authenticateUser = async (req, res, next) => {
   const jwtCookieName = process.env.JWT_COOKIE_NAME;
   const jwtCookie = req.signedCookies[jwtCookieName];
 
-  // Add detailed logging
-  console.log("Authentication Debug:", {
-    hasMcpToken: !!mcp_token,
-    hasUserToken: !!user_token,
-    hasCookie: !!jwtCookie,
-    cookieName: jwtCookieName,
-    signedCookies: Object.keys(req.signedCookies),
-    query: req.query,
-    path: req.path,
-    headers: {
-      host: req.headers.host,
-      origin: req.headers.origin,
-      referer: req.headers.referer,
-    },
-  });
-
   // Determine the source of the JWT token
   const token = user_token || jwtCookie;
 
