@@ -3,8 +3,10 @@ import cors from "cors";
 // import morgan from "morgan";
 import routes from "./router/index.js";
 import cookieParser from "cookie-parser";
-
+import helmet from "helmet";
 const app = express();
+
+app.use(helmet());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.set("trust proxy", 1);
 
