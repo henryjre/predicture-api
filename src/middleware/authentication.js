@@ -1,4 +1,3 @@
-import pool from "../database/db.js";
 import moment from "moment";
 import { decodeBase64Token } from "../utils/hash.js";
 import jwt from "jsonwebtoken";
@@ -27,13 +26,11 @@ export const authenticateApiKey = (req, res, next) => {
 };
 
 export const authenticateUser = (req, res, next) => {
-  const { mcp_token } = req.query;
-  const nonceCookie = req.cookies.nonce;
-  const user_token = req.cookies.jwt;
+  const { mcp_token, user_token } = req.query;
 
   console.log("Received tokens:", { user_token, mcp_token });
 
-  if (!mcp_token || !user_token || !nonceCookie) {
+  if (!mcp_token || !user_token) {
     console.log("Missing tokens");
     res.redirect(
       `/html/error?id=5&mcp_token=${mcp_token}&user_token=${user_token}`
@@ -44,28 +41,6 @@ export const authenticateUser = (req, res, next) => {
   try {
     const decodedMcpToken = decodeBase64Token(mcp_token);
     console.log("Decoded MCP token:", decodedMcpToken);
-
-    const decodedJwtToken = jwt.verify(user_token, process.env.HASH_SECRET);
-    const { user_id, nonce } = decodedJwtToken;
-
-    console.log("Decoded JWT token:", decodedJwtToken);
-
-    if (jwtToken !== user_token) {
-      console.log("JWT token mismatch");
-      return res.redirect(
-        `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
-      );
-    }
-
-    if (nonce !== nonceCookie) {
-      console.log("Nonce mismatch detected:", {
-        jwtNonce: nonce,
-        cookieNonce: nonceCookie,
-      });
-      return res.redirect(
-        `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
-      );
-    }
 
     if (!decodedMcpToken) {
       console.log("Invalid MCP token");
@@ -92,12 +67,15 @@ export const authenticateUser = (req, res, next) => {
       );
     }
 
-    if (String(user_id) !== String(decodedMcpToken.sid)) {
+    const decodedJwtToken = jwt.verify(user_token, process.env.HASH_SECRET);
+    const { uid, iat } = decodedJwtToken;
+
+    if (String(uid) !== String(decodedMcpToken.sid)) {
       console.log("User ID mismatch:", {
-        jwtUserId: user_id,
+        jwtUserId: uid,
         mcpSid: decodedMcpToken.sid,
         types: {
-          jwtType: typeof user_id,
+          jwtType: typeof uid,
           mcpType: typeof decodedMcpToken.sid,
         },
       });
@@ -107,7 +85,16 @@ export const authenticateUser = (req, res, next) => {
       );
     }
 
-    req.user = { user_id: user_id };
+    const oneHourAgo = Date.now() - 3600 * 1000;
+
+    if (iat < oneHourAgo) {
+      console.log("Token expired (1 hour)");
+      return res.redirect(
+        `/html/error?id=6&mcp_token=${mcp_token}&user_token=${user_token}`
+      );
+    }
+
+    req.user = { user_id: uid };
     next();
   } catch (err) {
     console.log("Error in authentication:", err);
