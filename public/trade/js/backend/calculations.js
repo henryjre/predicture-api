@@ -53,12 +53,12 @@ export function buySharesToToken(amount, feeRate = 0.02) {
   // Cost before purchase
   const originalCost = cost(shares);
 
-  // Cost after purchase
-  const newCost = cost(updatedShares);
-
   // Update shares
   const updatedShares = { ...shares };
   updatedShares[choice] = (updatedShares[choice] || 0) + buyShares;
+
+  // Cost after purchase
+  const newCost = cost(updatedShares);
 
   const eps =
     updatedShares[choice] > 0
@@ -124,12 +124,10 @@ export function buyTokenToShares(amount, feeRate = 0.02) {
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   const adjustedAmount = amountDecimal
-    .times(multiplier)
+    .div(multiplier)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
-  const netAmount = adjustedAmount
-    .plus(fee)
-    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const netAmount = adjustedAmount.div(new Decimal(1).plus(feeRate));
 
   // Precompute exponentials
   const expOthers = [];
@@ -241,7 +239,7 @@ export function sellTokensToShares(refundAmount, feeRate = 0.02) {
         )
       : 0;
 
-  const multiplier = calculateBuyMultiplier(eps);
+  const multiplier = calculateSellMultiplier(eps);
 
   const refundDecimal = new Decimal(refundAmount);
 
@@ -250,13 +248,10 @@ export function sellTokensToShares(refundAmount, feeRate = 0.02) {
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   const adjustedRefund = refundDecimal
-    .times(multiplier)
+    .div(multiplier)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
-  const netRefund = adjustedRefund
-    .minus(fee)
-    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-
+  const netRefund = adjustedRefund.div(new Decimal(1).minus(feeRate));
   // Precompute exponentials
   const qk = new Decimal(shares[choice] || 0);
   const expQk = Decimal.exp(qk.div(b));
