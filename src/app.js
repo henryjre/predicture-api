@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 app.use(cookieParser(process.env.COOKIE_SECRET));
+app.set("trust proxy", 1);
 
 app.use(cors());
 app.use(express.json());
