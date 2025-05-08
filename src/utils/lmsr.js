@@ -19,6 +19,7 @@ export function calculatePurchaseCost(
   b,
   choice,
   amountToBuy,
+  rewards_pool,
   feeRate = 0.02
 ) {
   const qBefore = { ...shares };
@@ -27,12 +28,29 @@ export function calculatePurchaseCost(
   // Increase shares for the chosen option
   qAfter[choice] = (qAfter[choice] || 0) + amountToBuy;
 
+  const eps =
+    qAfter[choice] > 0
+      ? Number(
+          new Decimal(rewards_pool)
+            .div(qAfter[choice])
+            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+        )
+      : 0;
+
+  const multiplier = calculateBuyMultiplier(eps);
+
   const costBefore = lmsrCost(qBefore, b);
   const costAfter = lmsrCost(qAfter, b);
   const rawCost = new Decimal(costAfter - costBefore);
 
+  const adjustedCost = rawCost
+    .times(multiplier)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
   const fee = rawCost.times(feeRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-  const totalCost = rawCost.plus(fee).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const totalCost = adjustedCost
+    .plus(fee)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   return {
     rawCost: Number(rawCost.toDecimalPlaces(2, Decimal.ROUND_HALF_UP)),
@@ -48,8 +66,8 @@ export function calculateSellPayout(
   b,
   choice,
   amountToSell,
-  feeRate = 0.02,
-  k = 0.2
+  rewards_pool,
+  feeRate = 0.02
 ) {
   const qBefore = { ...shares };
   const qAfter = { ...shares };
@@ -63,14 +81,29 @@ export function calculateSellPayout(
   // Decrease shares for the chosen option
   qAfter[choice] -= amountToSell;
 
+  const eps =
+    qAfter[choice] > 0
+      ? Number(
+          new Decimal(rewards_pool)
+            .div(qAfter[choice])
+            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+        )
+      : 0;
+
+  const multiplier = calculateSellMultiplier(eps);
+
   const costBefore = lmsrCost(qBefore, b);
   const costAfter = lmsrCost(qAfter, b);
   const rawPayout = new Decimal(costBefore - costAfter);
 
+  const adjustedPayout = rawPayout
+    .times(multiplier)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
   const fee = rawPayout
     .times(feeRate)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-  const totalPayout = rawPayout
+  const totalPayout = adjustedPayout
     .minus(fee)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
@@ -103,4 +136,30 @@ export function calculateMarketPrices(shares, b) {
   }
 
   return prices;
+}
+
+// Calculate buy multiplier based on EPS
+export function calculateBuyMultiplier(eps) {
+  const epsDecimal = new Decimal(eps);
+  if (epsDecimal.lt(1.05)) {
+    // multiplier = 1 + [0.05 + ((1.03 - eps) / 1.03) * 0.5]
+    const part = new Decimal(1.03).minus(epsDecimal).div(1.03).times(0.5);
+    const multiplier = new Decimal(1).plus(new Decimal(0.05).plus(part));
+    return Number(multiplier.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
+  } else {
+    return 1.05;
+  }
+}
+
+export function calculateSellMultiplier(eps) {
+  const epsDecimal = new Decimal(eps);
+  if (epsDecimal.lt(1.05)) {
+    // multiplier = 1 - [0.05 + ((1.05 - eps) / 1.05) * 0.5]
+    const part = new Decimal(1.05).minus(epsDecimal).div(1.05).times(0.5);
+    const deduction = new Decimal(0.05).plus(part);
+    const multiplier = new Decimal(1).minus(deduction);
+    return Number(multiplier.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
+  } else {
+    return 0.9;
+  }
 }
