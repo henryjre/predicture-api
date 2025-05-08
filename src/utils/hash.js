@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "crypto";
+import { createHash, timingSafeEqual, randomBytes } from "crypto";
 import jwt from "jsonwebtoken";
 
 export function generateHash(str) {
@@ -44,6 +44,7 @@ export function createJwtToken(user_id) {
     throw new Error("user_id is required");
   }
 
+  const nonce = randomBytes(16).toString("hex");
   const issuedAt = Date.now();
 
   if (!process.env.JWT_SECRET) {
@@ -51,12 +52,12 @@ export function createJwtToken(user_id) {
   }
 
   const jwtToken = jwt.sign(
-    { uid: user_id, iat: issuedAt },
+    { uid: user_id, nonce: nonce, iat: issuedAt },
     process.env.JWT_SECRET,
     {
       expiresIn: "1h",
     }
   );
 
-  return { jwtToken, issuedAt };
+  return { jwtToken, nonce, issuedAt };
 }

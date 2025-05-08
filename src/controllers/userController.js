@@ -69,35 +69,26 @@ export async function rotateToken(req, res) {
       return res.status(400).json({ ok: false, error: "User ID is required" });
     }
 
-    const { jwtToken, issuedAt } = createJwtToken(user_id);
+    const { jwtToken, nonce, issuedAt } = createJwtToken(user_id);
 
     const iat = new Date(issuedAt);
-    const ipAddress = extractIPv4(req.ip) || "0.0.0.0";
-    console.log("ipAddress", ipAddress);
 
     const query = `
-      INSERT INTO jwt_tokens (user_id, token, ip_address, date_created) 
+      INSERT INTO jwt_tokens (user_id, token, latest_nonce, date_created) 
       VALUES ($1, $2, $3, $4)
       ON CONFLICT (user_id) 
       DO UPDATE SET 
         token = EXCLUDED.token,
-        ip_address = EXCLUDED.ip_address,
+        latest_nonce = EXCLUDED.latest_nonce,
         date_created = EXCLUDED.date_created
       RETURNING *;
     `;
 
-    await pool.query(query, [user_id, jwtToken, ipAddress, iat]);
+    await pool.query(query, [user_id, jwtToken, nonce, iat]);
 
     res.json({ ok: true, jwt: jwtToken });
   } catch (err) {
     console.error("Error in rotateToken:", err.message);
     res.status(500).json({ ok: false, error: err.message });
-  }
-
-  function extractIPv4(ip) {
-    if (ip.startsWith("::ffff:")) {
-      return ip.split("::ffff:")[1];
-    }
-    return ip;
   }
 }

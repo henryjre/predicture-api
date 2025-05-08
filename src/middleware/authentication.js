@@ -61,7 +61,7 @@ export const authenticateUser = async (req, res, next) => {
     }
 
     const decodedJwtToken = jwt.verify(user_token, process.env.JWT_SECRET);
-    const { uid, iat } = decodedJwtToken;
+    const { uid, nonce } = decodedJwtToken;
 
     if (String(uid) !== String(decodedMcpToken.sid)) {
       return res.redirect(
@@ -69,19 +69,15 @@ export const authenticateUser = async (req, res, next) => {
       );
     }
 
-    const ipAddress = extractIPv4(req.ip) || "0.0.0.0";
-
-    console.log("ipAddress", ipAddress);
-
     // Database Check: Verify the token in the database
     const query = `
-      SELECT token, ip_address, date_created 
+      SELECT token, latest_nonce 
       FROM jwt_tokens 
       WHERE user_id = $1;
     `;
 
     const { rows } = await pool.query(query, [uid]);
-    const { token, ip_address, date_created } = rows[0];
+    const { token, latest_nonce } = rows[0];
 
     if (token !== user_token) {
       console.log("JWT mismatch");
@@ -90,8 +86,8 @@ export const authenticateUser = async (req, res, next) => {
       );
     }
 
-    if (ip_address !== ipAddress) {
-      console.log("IP mismatch");
+    if (latest_nonce !== nonce) {
+      console.log("Nonce mismatch");
       return res.redirect(
         `/html/error?id=2&mcp_token=${mcp_token}&user_token=${user_token}`
       );
