@@ -33,6 +33,7 @@ export function calculateMarketPrices(choice, amountToBuy = 0) {
 export function buySharesToToken(amount, feeRate = 0.02) {
   const shares = window.sharesData;
   const b = new Decimal(window.bConstant);
+  const rewards_pool = new Decimal(window.rewardsPool);
   const choice = new URLSearchParams(window.location.search).get("choice");
 
   // Round down the number of shares to buy
@@ -52,20 +53,38 @@ export function buySharesToToken(amount, feeRate = 0.02) {
   // Cost before purchase
   const originalCost = cost(shares);
 
+  // Cost after purchase
+  const newCost = cost(updatedShares);
+
   // Update shares
   const updatedShares = { ...shares };
   updatedShares[choice] = (updatedShares[choice] || 0) + buyShares;
 
-  // Cost after purchase
-  const newCost = cost(updatedShares);
+  const eps =
+    updatedShares[choice] > 0
+      ? Number(
+          new Decimal(rewards_pool)
+            .div(updatedShares[choice])
+            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+        )
+      : 0;
+
+  const multiplier = calculateBuyMultiplier(eps);
 
   // Raw token cost
   const rawTokens = newCost.minus(originalCost);
 
+  const adjustedCost = rawTokens
+    .times(multiplier)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
   // Round to 2 decimal places
-  const tokens = rawTokens.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-  const fee = tokens.times(feeRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-  const totalCost = tokens.plus(fee).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const fee = rawTokens
+    .times(feeRate)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const totalCost = adjustedCost
+    .plus(fee)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   // Average price per share (4 decimals)
   const averagePrice =
@@ -83,11 +102,34 @@ export function buySharesToToken(amount, feeRate = 0.02) {
 export function buyTokenToShares(amount, feeRate = 0.02) {
   const shares = window.sharesData;
   const b = new Decimal(window.bConstant);
+  const rewards_pool = new Decimal(window.rewardsPool);
   const choice = new URLSearchParams(window.location.search).get("choice");
+
+  const eps =
+    shares[choice] > 0
+      ? Number(
+          new Decimal(rewards_pool)
+            .div(shares[choice])
+            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+        )
+      : 0;
+
+  const multiplier = calculateBuyMultiplier(eps);
 
   // Parse input amount and apply fee deduction (to get net usable tokens)
   const amountDecimal = new Decimal(amount);
-  const netAmount = amountDecimal.div(new Decimal(1).plus(feeRate));
+
+  const fee = amountDecimal
+    .times(feeRate)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  const adjustedAmount = amountDecimal
+    .times(multiplier)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  const netAmount = adjustedAmount
+    .plus(fee)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   // Precompute exponentials
   const expOthers = [];
@@ -116,7 +158,7 @@ export function buyTokenToShares(amount, feeRate = 0.02) {
 
   return {
     shares: buyShares,
-    fee: Number(amountDecimal.minus(netAmount).toDecimalPlaces(2)),
+    fee: fee,
     averagePrice:
       buyShares > 0
         ? Number(
@@ -146,13 +188,31 @@ export function sellSharesToToken(shareAmount, feeRate = 0.02) {
   const updatedShares = { ...shares };
   updatedShares[choice] = (updatedShares[choice] || 0) - sellShares;
 
+  const eps =
+    updatedShares[choice] > 0
+      ? Number(
+          new Decimal(rewards_pool)
+            .div(updatedShares[choice])
+            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+        )
+      : 0;
+
+  const multiplier = calculateSellMultiplier(eps);
+
   const newCost = cost(updatedShares);
 
   const rawRefund = originalCost.minus(newCost);
 
-  const tokens = rawRefund.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-  const fee = tokens.times(feeRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
-  const netRefund = tokens.minus(fee).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const adjustedRefund = rawRefund
+    .times(multiplier)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  const fee = rawRefund
+    .times(feeRate)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const netRefund = adjustedRefund
+    .minus(fee)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   const averagePrice =
     sellShares > 0
@@ -169,10 +229,33 @@ export function sellSharesToToken(shareAmount, feeRate = 0.02) {
 export function sellTokensToShares(refundAmount, feeRate = 0.02) {
   const shares = window.sharesData;
   const b = new Decimal(window.bConstant);
+  const rewards_pool = new Decimal(window.rewardsPool);
   const choice = new URLSearchParams(window.location.search).get("choice");
 
+  const eps =
+    shares[choice] > 0
+      ? Number(
+          new Decimal(rewards_pool)
+            .div(shares[choice])
+            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+        )
+      : 0;
+
+  const multiplier = calculateBuyMultiplier(eps);
+
   const refundDecimal = new Decimal(refundAmount);
-  const netRefund = refundDecimal.div(new Decimal(1).minus(feeRate));
+
+  const fee = refundDecimal
+    .times(feeRate)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  const adjustedRefund = refundDecimal
+    .times(multiplier)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  const netRefund = adjustedRefund
+    .minus(fee)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   // Precompute exponentials
   const qk = new Decimal(shares[choice] || 0);
@@ -202,8 +285,34 @@ export function sellTokensToShares(refundAmount, feeRate = 0.02) {
 
   return {
     shares: sellShares.toNumber(),
-    netRefund: Number(netRefund.toDecimalPlaces(2)),
-    fee: Number(netRefund.minus(refundDecimal).toDecimalPlaces(2)),
+    netRefund: Number(netRefund),
+    fee: fee,
     averagePrice: Number(averagePrice),
   };
+}
+
+// Calculate buy multiplier based on EPS
+export function calculateBuyMultiplier(eps) {
+  const epsDecimal = new Decimal(eps);
+  if (epsDecimal.lt(1.05)) {
+    // multiplier = 1 + [0.05 + ((1.03 - eps) / 1.03) * 0.5]
+    const part = new Decimal(1.03).minus(epsDecimal).div(1.03).times(0.5);
+    const multiplier = new Decimal(1).plus(new Decimal(0.05).plus(part));
+    return Number(multiplier.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
+  } else {
+    return 1.05;
+  }
+}
+
+export function calculateSellMultiplier(eps) {
+  const epsDecimal = new Decimal(eps);
+  if (epsDecimal.lt(1.05)) {
+    // multiplier = 1 - [0.05 + ((1.05 - eps) / 1.05) * 0.5]
+    const part = new Decimal(1.05).minus(epsDecimal).div(1.05).times(0.5);
+    const deduction = new Decimal(0.05).plus(part);
+    const multiplier = new Decimal(1).minus(deduction);
+    return Number(multiplier.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
+  } else {
+    return 0.9;
+  }
 }
