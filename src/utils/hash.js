@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "crypto";
+import { createHash, timingSafeEqual, randomBytes } from "crypto";
 import jwt from "jsonwebtoken";
 
 export function generateHash(str) {
@@ -44,7 +44,7 @@ export function createJwtToken(user_id) {
     throw new Error("user_id is required");
   }
 
-  const nonce = crypto.randomBytes(16).toString("hex");
+  const nonce = randomBytes(16).toString("hex");
 
   if (!process.env.HASH_SECRET) {
     throw new Error("HASH_SECRET environment variable is not set");
