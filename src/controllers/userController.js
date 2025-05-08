@@ -5,7 +5,7 @@ import {
   getOpenPositionsByEvent,
   getUserDbData,
 } from "../database/userModel.js";
-import { decodeBase64Token } from "../utils/hash.js";
+import { createJwtToken } from "../utils/hash.js";
 
 export async function openPositions(req, res) {
   try {
@@ -46,27 +46,27 @@ export async function createUserData(req, res) {
     const result = await createUserRow(user_id);
 
     if (!result.ok) {
-      return res
-        .status(500)
-        .json({ ok: false, error: result.error, hashString: "" });
+      return res.status(500).json({ ok: false, error: result.error });
     }
 
-    return res.json({ ok: true, hashString: result.hash });
+    return res.json({ ok: true });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
       ok: false,
       error: "Failed to create user data.",
-      hashString: "",
     });
   }
 }
 
-export async function samplePost(req, res) {
+export async function rotateToken(req, res) {
   try {
-    return res.json({ ok: true, message: "Hello, world!" });
+    const { user_id } = req.body;
+    const jwtToken = createJwtToken(user_id);
+
+    res.json({ ok: true, jwt: jwtToken });
   } catch (err) {
     console.error(err);
-    res.status(404).json({ ok: false, message: "Failed to fetch." });
+    res.status(500).json({ ok: false, error: err.message });
   }
 }

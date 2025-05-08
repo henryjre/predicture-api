@@ -1,7 +1,8 @@
 import moment from "moment-timezone";
 import pool from "./db.js";
 import { calculateMarketPrices } from "../utils/lmsr.js";
-import { generateHash } from "../utils/hash.js";
+import { createJwtToken } from "../utils/hash.js";
+
 export async function getUserDbData(userId) {
   const res = await pool.query("SELECT * FROM users_data WHERE user_id = $1", [
     userId,
@@ -104,23 +105,19 @@ export async function createUserRow(userId) {
   try {
     const currentDate = moment.tz("Asia/Manila");
     const formattedDate = currentDate.format();
-    const unix = currentDate.valueOf();
 
-    const hashString = `${userId}-${process.env.HASH_SECRET}-${unix}`;
-    const hash = generateHash(hashString);
-
-    const insertRes = await pool.query(
+    await pool.query(
       `
-      INSERT INTO users_data (user_id, hash, last_updated)
-      VALUES ($1, $2, $3)
+      INSERT INTO users_data (user_id, last_updated)
+      VALUES ($1, $2)
       ON CONFLICT (user_id) 
-      DO UPDATE SET hash = EXCLUDED.hash, last_updated = EXCLUDED.last_updated
-      RETURNING id, user_id, hash
+      DO UPDATE SET last_updated = EXCLUDED.last_updated
+      RETURNING id, user_id
       `,
-      [userId, hash, formattedDate]
+      [userId, formattedDate]
     );
 
-    return { ok: true, hash: hash };
+    return { ok: true };
   } catch (err) {
     console.error(err);
     return { ok: false, error: err, data: [] };

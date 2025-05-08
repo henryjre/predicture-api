@@ -1,6 +1,7 @@
 import pool from "../database/db.js";
 import moment from "moment";
 import { decodeBase64Token } from "../utils/hash.js";
+import jwt from "jsonwebtoken";
 
 // Helper function to check if timestamp is more than 1 hour old
 function isOneHourAgo(unixTimestamp) {
@@ -11,9 +12,6 @@ function isOneHourAgo(unixTimestamp) {
 
 export const authenticateApiKey = (req, res, next) => {
   const apiKey = req.headers["x-api-key"]; // Use 'x-api-key' header
-
-  console.log("Received API Key:", apiKey);
-  console.log("Expected API Key:", process.env.API_KEY);
 
   if (!apiKey) {
     return res
@@ -28,105 +26,77 @@ export const authenticateApiKey = (req, res, next) => {
   next();
 };
 
-export const authenticateUser = async (req, res, next) => {
-  const { mcp_token, signature } = req.query;
+export const authenticateUser = (req, res, next) => {
+  const { user_token, mcp_token } = req.query;
 
-  if (!mcp_token) {
-    res.redirect(
-      `/html/error?id=2&mcp_token=${mcp_token}&signature=${signature}`
-    );
-    return;
-  }
+  console.log("Received tokens:", { user_token, mcp_token });
 
-  if (!signature) {
+  if (!mcp_token || !user_token) {
+    console.log("Missing tokens");
     res.redirect(
-      `/html/error?id=2&mcp_token=${mcp_token}&signature=${signature}`
+      `/html/error?id=5&mcp_token=${mcp_token}&user_token=${user_token}`
     );
     return;
   }
 
   try {
-    // Decode the token to extract the user_id (sid)
-    const decodedToken = decodeBase64Token(mcp_token);
+    const decodedMcpToken = decodeBase64Token(mcp_token);
+    console.log("Decoded MCP token:", decodedMcpToken);
 
-    if (!decodedToken) {
+    const decodedJwtToken = jwt.verify(user_token, process.env.HASH_SECRET);
+    console.log("Decoded JWT token:", decodedJwtToken);
+
+    if (!decodedMcpToken) {
+      console.log("Invalid MCP token");
+      return res.redirect(
+        `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
+      );
+    }
+
+    if (!decodedMcpToken.sid) {
+      console.log("Missing sid in MCP token");
       res.redirect(
-        `/html/error?id=5&mcp_token=${mcp_token}&signature=${signature}`
+        `/html/error?id=5&mcp_token=${mcp_token}&user_token=${user_token}`
       );
       return;
     }
 
-    const userId = decodedToken.sid;
+    const tokenTimestamp = decodedMcpToken.ts;
+    console.log("Token timestamp:", tokenTimestamp);
 
-    if (!userId) {
-      res.redirect(
-        `/html/error?id=5&mcp_token=${mcp_token}&signature=${signature}`
-      );
-      return;
-    }
-
-    const tokenTimestamp = decodedToken.ts;
-    const tokenTime = moment(tokenTimestamp);
-    const tokenTimeUnix = moment
-      .unix(decodedToken.exp)
-      .format("MMMM DD YYYY [at] h:mm A");
-
-    if (isOneHourAgo(tokenTimeUnix)) {
+    if (isOneHourAgo(tokenTimestamp)) {
+      console.log("Token expired (1 hour)");
       return res.redirect(
-        `/html/error?id=6&mcp_token=${mcp_token}&signature=${signature}`
+        `/html/error?id=6&mcp_token=${mcp_token}&user_token=${user_token}`
       );
     }
 
-    const query = "SELECT token, hash FROM users_data WHERE user_id = $1";
-    const result = await pool.query(query, [userId]);
-
-    const token = result.rows[0].token;
-    const hash = result.rows[0].hash;
-
-    if (signature !== hash) {
+    if (String(decodedJwtToken.user_id) !== String(decodedMcpToken.sid)) {
+      console.log("User ID mismatch:", {
+        jwtUserId: decodedJwtToken.user_id,
+        mcpSid: decodedMcpToken.sid,
+        types: {
+          jwtType: typeof decodedJwtToken.user_id,
+          mcpType: typeof decodedMcpToken.sid,
+        },
+      });
       return res.redirect(
-        `/html/error?id=2&mcp_token=${mcp_token}&signature=${signature}`
+        `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
       );
     }
 
-    if (!token || token.length === 0) {
-      // If no token found, update the token column with the current token
-      const insertQuery = "UPDATE users_data SET token = $1 WHERE user_id = $2";
-      await pool.query(insertQuery, [mcp_token, userId]);
-
-      req.user = { user_id: userId };
-      next();
-      return;
-    }
-
-    const storedToken = result.rows[0].token;
-    const storedDecoded = decodeBase64Token(storedToken);
-    const storedTimestamp = storedDecoded.ts;
-
-    const storedTokenTime = moment(storedTimestamp);
-
-    // If tokens match
-    if (mcp_token === storedToken) {
-      req.user = { user_id: userId };
-      next();
-      return;
-    }
-
-    if (tokenTime.isBefore(storedTokenTime)) {
-      return res.redirect(
-        `/html/error?id=6&mcp_token=${mcp_token}&signature=${signature}`
-      );
-    }
-
-    const updateQuery = "UPDATE users_data SET token = $1 WHERE user_id = $2";
-    await pool.query(updateQuery, [mcp_token, userId]);
-
-    req.user = { user_id: userId };
+    req.user = { user_id: decodedJwtToken.user_id };
     next();
   } catch (err) {
-    console.error(err);
+    console.log("Error in authentication:", err);
+    if (err.name === "TokenExpiredError") {
+      return res.redirect(
+        `/html/error?id=6&mcp_token=${mcp_token}&user_token=${user_token}`
+      );
+    }
+
     return res.redirect(
-      `/html/error?id=5&mcp_token=${mcp_token}&signature=${signature}`
+      `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
     );
   }
 };

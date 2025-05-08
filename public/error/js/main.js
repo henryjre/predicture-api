@@ -34,6 +34,10 @@ const errorMessages = {
     message:
       "Your session has been active for more than an hour. Please refresh your access.",
   },
+  8: {
+    title: "Invalid Token",
+    message: "The token you provided is invalid. Please try again.",
+  },
 };
 
 // Get error code from URL query parameters

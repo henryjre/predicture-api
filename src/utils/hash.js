@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "crypto";
+import jwt from "jsonwebtoken";
 
 export function generateHash(str) {
   return createHash("sha256").update(str).digest("hex");
@@ -36,4 +37,15 @@ export function decodeBase64Token(token) {
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     return Buffer.from(base64, "base64").toString("utf8");
   }
+}
+
+export function createJwtToken(user_id) {
+  if (!user_id) {
+    throw new Error("user_id is required");
+  }
+  if (!process.env.HASH_SECRET) {
+    throw new Error("HASH_SECRET environment variable is not set");
+  }
+
+  return jwt.sign({ user_id }, process.env.HASH_SECRET, { expiresIn: "1h" });
 }
