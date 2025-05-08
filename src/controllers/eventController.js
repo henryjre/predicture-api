@@ -24,7 +24,7 @@ export async function eventReceive(req, res) {
 }
 
 async function buyEvent(req, res) {
-  const { user_id, event_id, action, shares, choice, b_constant } = req.body;
+  const { user_id, event_id, action, shares, choice, b_const } = req.body;
 
   const client = await pool.connect();
 
@@ -44,6 +44,10 @@ async function buyEvent(req, res) {
     const event = eventRes.rows[0];
 
     const shares_data = event.shares_data;
+    const rewards_pool = event.rewards_pool;
+    const databaseB = event.b_constant;
+
+    const b_constant = b_const || databaseB;
 
     // Calculate market before the update
     const marketBefore = calculateMarketPrices(shares_data, b_constant);
@@ -53,7 +57,8 @@ async function buyEvent(req, res) {
       shares_data,
       b_constant,
       choice,
-      shares
+      shares,
+      rewards_pool
     );
 
     // Update the locked row with new shares
@@ -220,7 +225,7 @@ export async function getCurrenMarketData(req, res) {
 
   try {
     const eventRes = await pool.query(
-      `SELECT  event_title, shares_data, b_constant
+      `SELECT  event_title, shares_data, b_constant, rewards_pool
        FROM events
        WHERE event_id = $1`,
       [event_id]
@@ -232,6 +237,7 @@ export async function getCurrenMarketData(req, res) {
       title: event.event_title,
       b_constant: event.b_constant,
       shares_data: event.shares_data,
+      rewards_pool: event.rewards_pool,
     });
   } catch (err) {
     console.error(err);
