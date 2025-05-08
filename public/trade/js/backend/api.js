@@ -12,6 +12,7 @@ export async function fetchCurrentMarket(isRefresh) {
 
   window.sharesData = result.ok ? result.shares_data : {};
   window.bConstant = result.ok ? result.b_constant : 0;
+  window.rewardsPool = result.ok ? result.rewards_pool : 0;
 
   const params = new URLSearchParams(window.location.search);
   const urlChoice = params.get("choice");
