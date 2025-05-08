@@ -139,12 +139,16 @@ export const authenticateUser = async (req, res, next) => {
       res.cookie(jwtCookieName, user_token, {
         httpOnly: true,
         secure: true,
-        sameSite: "Strict",
+        sameSite: "None",
         signed: true,
         maxAge: 60 * 60 * 1000,
         path: "/",
         domain: process.env.DOMAIN,
       });
+
+      // Add CORS headers for the redirect
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Origin", "https://l.messenger.com");
 
       // Remove `user_token` and `mcp_token` from query params
       const newQuery = new URLSearchParams(rest).toString();
