@@ -5,7 +5,10 @@ import {
   rotateToken,
 } from "../../../controllers/userController.js";
 import { eventReceive } from "../../../controllers/eventController.js";
-import { authenticateApiKey } from "../../../middleware/authentication.js";
+import {
+  authenticateApiKey,
+  authenticateUser,
+} from "../../../middleware/authentication.js";
 
 const router = express.Router();
 
@@ -16,6 +19,6 @@ router.post("/createUserData", authenticateApiKey, createUserData);
 router.post("/rotateToken", authenticateApiKey, rotateToken);
 
 // POST /api/events/trade
-router.post("/trade", eventReceive);
+router.post("/trade", authenticateUser, eventReceive);
 
 export default router;
