@@ -4,7 +4,7 @@ import userRoutes from "./routes/userRoutes.js";
 import privateRoutes from "./routes/privateRoutes.js";
 import {
   authenticateApiKey,
-  authenticateUser,
+  authenticateJWT,
 } from "../../middleware/authentication.js";
 
 const router = Router();
@@ -13,7 +13,7 @@ const router = Router();
 router.use("/events", eventRoutes);
 
 // /api/users/*
-router.use("/users", authenticateUser, userRoutes);
+router.use("/users", authenticateJWT, userRoutes);
 
 // /api/private/*
 router.use("/private", authenticateApiKey, privateRoutes);

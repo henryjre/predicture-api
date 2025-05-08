@@ -25,7 +25,10 @@ export async function getUserMarketData(req, res) {
     const { user_id, event_id } = req.body;
 
     const user_data = await getUserDbData(user_id);
-    const open_positions = await getOpenPositionsByEvent(user_data, event_id);
+    const open_positions = await getOpenPositionsByEvent(
+      user_data.user_id,
+      event_id
+    );
 
     const data = {
       ok: true,

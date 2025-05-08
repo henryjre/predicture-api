@@ -28,10 +28,12 @@ export async function getOpenPositionsByEvent(userId, eventId) {
     [userId, eventId]
   );
 
-  return rows.map((r) => ({
-    choice: r.choice,
-    shares: Number(r.shares),
-  }));
+  console.log(rows);
+
+  return rows.reduce((acc, r) => {
+    acc[r.choice] = Number(r.shares);
+    return acc;
+  }, {});
 }
 
 export async function upsertUserPosition(

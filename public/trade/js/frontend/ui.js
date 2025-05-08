@@ -1,4 +1,5 @@
 import { handleCalculationOfInput } from "../backend/handleInput.js";
+import { handleWalletBalance } from "../backend/user.js";
 
 // UI State Management
 export function setupBuySellToggle() {
@@ -28,6 +29,8 @@ export function setupBuySellToggle() {
       fromAssetCaret.classList.add("hidden");
       fromAssetSym.textContent = "Token";
 
+      handleWalletBalance("buy");
+
       toAssetBtn.classList.remove("disabled");
       toAssetCaret.classList.remove("hidden");
       toAssetSym.textContent = choice;
@@ -45,6 +48,8 @@ export function setupBuySellToggle() {
       fromAssetBtn.classList.remove("disabled");
       fromAssetCaret.classList.remove("hidden");
       fromAssetSym.textContent = choice;
+
+      handleWalletBalance("sell");
 
       toAssetBtn.classList.add("disabled");
       toAssetCaret.classList.add("hidden");

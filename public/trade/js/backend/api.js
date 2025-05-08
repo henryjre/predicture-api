@@ -52,13 +52,3 @@ export function updateUrlChoice(choice) {
     `${window.location.pathname}?${params.toString()}`
   );
 }
-
-export async function fetchUserMarketData(userId) {
-  const eventId = getEventIdFromQuery();
-
-  const res = await fetch(
-    `/api/users/market_data?user_id=${userId}&event_id=${eventId}`
-  );
-  const result = await res.json();
-  return result;
-}

@@ -6,7 +6,7 @@ import {
   handleInput,
   handleCalculationOfInput,
 } from "./backend/handleInput.js";
-import { displayUserMarketData } from "./backend/user.js";
+import { displayUserMarketData, handleWalletBalance } from "./backend/user.js";
 
 async function loadEventTitle() {
   const { ok, title, shares_data } = await fetchCurrentMarket();
@@ -46,6 +46,7 @@ async function loadEventTitle() {
       window.defaultChoice = selectedChoice;
 
       handleCalculationOfInput(isBuy ? "buy" : "sell");
+      handleWalletBalance(isBuy ? "buy" : "sell");
 
       // Close the modal after selection
       const tokenModal = document.getElementById("tokenModal");
