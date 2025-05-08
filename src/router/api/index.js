@@ -2,10 +2,6 @@ import { Router } from "express";
 import eventRoutes from "./routes/eventRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import privateRoutes from "./routes/privateRoutes.js";
-import {
-  authenticateApiKey,
-  authenticateJWT,
-} from "../../middleware/authentication.js";
 
 const router = Router();
 
@@ -13,9 +9,9 @@ const router = Router();
 router.use("/events", eventRoutes);
 
 // /api/users/*
-router.use("/users", authenticateJWT, userRoutes);
+router.use("/users", userRoutes);
 
 // /api/private/*
-router.use("/private", authenticateApiKey, privateRoutes);
+router.use("/private", privateRoutes);
 
 export default router;
