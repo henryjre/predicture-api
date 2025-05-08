@@ -62,7 +62,21 @@ export async function createUserData(req, res) {
 export async function rotateToken(req, res) {
   try {
     const { user_id } = req.body;
-    const jwtToken = createJwtToken(user_id);
+    const { jwtToken, nonce } = createJwtToken(user_id);
+
+    res.cookie("nonce", nonce, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 3600 * 1000, // 1 hour
+    });
+
+    res.cookie("jwt", jwtToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 3600 * 1000,
+    });
 
     res.json({ ok: true, jwt: jwtToken });
   } catch (err) {

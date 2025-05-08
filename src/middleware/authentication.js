@@ -27,11 +27,13 @@ export const authenticateApiKey = (req, res, next) => {
 };
 
 export const authenticateUser = (req, res, next) => {
-  const { user_token, mcp_token } = req.query;
+  const { mcp_token } = req.query;
+  const nonceCookie = req.cookies.nonce;
+  const user_token = req.cookies.jwt;
 
   console.log("Received tokens:", { user_token, mcp_token });
 
-  if (!mcp_token || !user_token) {
+  if (!mcp_token || !user_token || !nonceCookie) {
     console.log("Missing tokens");
     res.redirect(
       `/html/error?id=5&mcp_token=${mcp_token}&user_token=${user_token}`
@@ -44,7 +46,26 @@ export const authenticateUser = (req, res, next) => {
     console.log("Decoded MCP token:", decodedMcpToken);
 
     const decodedJwtToken = jwt.verify(user_token, process.env.HASH_SECRET);
+    const { user_id, nonce } = decodedJwtToken;
+
     console.log("Decoded JWT token:", decodedJwtToken);
+
+    if (jwtToken !== user_token) {
+      console.log("JWT token mismatch");
+      return res.redirect(
+        `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
+      );
+    }
+
+    if (nonce !== nonceCookie) {
+      console.log("Nonce mismatch detected:", {
+        jwtNonce: nonce,
+        cookieNonce: nonceCookie,
+      });
+      return res.redirect(
+        `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
+      );
+    }
 
     if (!decodedMcpToken) {
       console.log("Invalid MCP token");
@@ -71,21 +92,22 @@ export const authenticateUser = (req, res, next) => {
       );
     }
 
-    if (String(decodedJwtToken.user_id) !== String(decodedMcpToken.sid)) {
+    if (String(user_id) !== String(decodedMcpToken.sid)) {
       console.log("User ID mismatch:", {
-        jwtUserId: decodedJwtToken.user_id,
+        jwtUserId: user_id,
         mcpSid: decodedMcpToken.sid,
         types: {
-          jwtType: typeof decodedJwtToken.user_id,
+          jwtType: typeof user_id,
           mcpType: typeof decodedMcpToken.sid,
         },
       });
+
       return res.redirect(
         `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
       );
     }
 
-    req.user = { user_id: decodedJwtToken.user_id };
+    req.user = { user_id: user_id };
     next();
   } catch (err) {
     console.log("Error in authentication:", err);

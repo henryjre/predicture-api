@@ -43,9 +43,16 @@ export function createJwtToken(user_id) {
   if (!user_id) {
     throw new Error("user_id is required");
   }
+
+  const nonce = crypto.randomBytes(16).toString("hex");
+
   if (!process.env.HASH_SECRET) {
     throw new Error("HASH_SECRET environment variable is not set");
   }
 
-  return jwt.sign({ user_id }, process.env.HASH_SECRET, { expiresIn: "1h" });
+  const token = jwt.sign({ user_id, nonce }, process.env.HASH_SECRET, {
+    expiresIn: "1h",
+  });
+
+  return { jwtToken: token, nonce: nonce };
 }
