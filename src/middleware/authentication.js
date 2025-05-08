@@ -49,6 +49,22 @@ export const authenticateUser = async (req, res, next) => {
   const jwtCookieName = process.env.JWT_COOKIE_NAME;
   const jwtCookie = req.signedCookies[jwtCookieName];
 
+  // Add detailed logging
+  console.log("Authentication Debug:", {
+    hasMcpToken: !!mcp_token,
+    hasUserToken: !!user_token,
+    hasCookie: !!jwtCookie,
+    cookieName: jwtCookieName,
+    signedCookies: Object.keys(req.signedCookies),
+    query: req.query,
+    path: req.path,
+    headers: {
+      host: req.headers.host,
+      origin: req.headers.origin,
+      referer: req.headers.referer,
+    },
+  });
+
   // Determine the source of the JWT token
   const token = user_token || jwtCookie;
 
@@ -122,10 +138,12 @@ export const authenticateUser = async (req, res, next) => {
     if (user_token) {
       res.cookie(jwtCookieName, user_token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "Strict",
         signed: true,
         maxAge: 60 * 60 * 1000,
+        path: "/",
+        domain: process.env.DOMAIN,
       });
 
       // Remove `user_token` and `mcp_token` from query params
