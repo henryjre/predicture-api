@@ -4,6 +4,7 @@ import {
   getUserMarketData,
   openPositions,
 } from "../../../controllers/userController.js";
+import { authenticateUser } from "../../../middleware/authentication.js";
 
 const router = express.Router();
 
@@ -11,6 +12,6 @@ const router = express.Router();
 router.get("/positions/open/:userId", openPositions);
 
 // GET /api/user/market_data
-router.post("/market_data", getUserMarketData);
+router.post("/market_data", authenticateUser, getUserMarketData);
 
 export default router;
