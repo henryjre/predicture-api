@@ -29,10 +29,7 @@ export const authenticateApiKey = (req, res, next) => {
 export const authenticateUser = async (req, res, next) => {
   const { mcp_token, user_token } = req.query;
 
-  console.log("Received tokens:", { user_token, mcp_token });
-
   if (!mcp_token || !user_token) {
-    console.log("Missing tokens");
     res.redirect(
       `/html/error?id=5&mcp_token=${mcp_token}&user_token=${user_token}`
     );
@@ -41,17 +38,14 @@ export const authenticateUser = async (req, res, next) => {
 
   try {
     const decodedMcpToken = decodeBase64Token(mcp_token);
-    console.log("Decoded MCP token:", decodedMcpToken);
 
     if (!decodedMcpToken) {
-      console.log("Invalid MCP token");
       return res.redirect(
         `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
       );
     }
 
     if (!decodedMcpToken.sid) {
-      console.log("Missing sid in MCP token");
       res.redirect(
         `/html/error?id=5&mcp_token=${mcp_token}&user_token=${user_token}`
       );
@@ -59,10 +53,8 @@ export const authenticateUser = async (req, res, next) => {
     }
 
     const tokenTimestamp = decodedMcpToken.ts;
-    console.log("Token timestamp:", tokenTimestamp);
 
     if (isOneHourAgo(tokenTimestamp)) {
-      console.log("Token expired (1 hour)");
       return res.redirect(
         `/html/error?id=6&mcp_token=${mcp_token}&user_token=${user_token}`
       );
@@ -72,21 +64,14 @@ export const authenticateUser = async (req, res, next) => {
     const { uid, iat } = decodedJwtToken;
 
     if (String(uid) !== String(decodedMcpToken.sid)) {
-      console.log("User ID mismatch:", {
-        jwtUserId: uid,
-        mcpSid: decodedMcpToken.sid,
-        types: {
-          jwtType: typeof uid,
-          mcpType: typeof decodedMcpToken.sid,
-        },
-      });
-
       return res.redirect(
         `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
       );
     }
 
-    const ipAddress = req.ip || "0.0.0.0";
+    const ipAddress = extractIPv4(req.ip) || "0.0.0.0";
+
+    console.log("ipAddress", ipAddress);
 
     // Database Check: Verify the token in the database
     const query = `
@@ -125,5 +110,12 @@ export const authenticateUser = async (req, res, next) => {
     return res.redirect(
       `/html/error?id=8&mcp_token=${mcp_token}&user_token=${user_token}`
     );
+  }
+
+  function extractIPv4(ip) {
+    if (ip.startsWith("::ffff:")) {
+      return ip.split("::ffff:")[1];
+    }
+    return ip;
   }
 };

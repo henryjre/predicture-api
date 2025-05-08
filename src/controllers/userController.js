@@ -72,7 +72,8 @@ export async function rotateToken(req, res) {
     const { jwtToken, issuedAt } = createJwtToken(user_id);
 
     const iat = new Date(issuedAt);
-    const ipAddress = req.ip || "0.0.0.0";
+    const ipAddress = extractIPv4(req.ip) || "0.0.0.0";
+    console.log("ipAddress", ipAddress);
 
     const query = `
       INSERT INTO jwt_tokens (user_id, token, ip_address, date_created) 
@@ -91,5 +92,12 @@ export async function rotateToken(req, res) {
   } catch (err) {
     console.error("Error in rotateToken:", err.message);
     res.status(500).json({ ok: false, error: err.message });
+  }
+
+  function extractIPv4(ip) {
+    if (ip.startsWith("::ffff:")) {
+      return ip.split("::ffff:")[1];
+    }
+    return ip;
   }
 }
