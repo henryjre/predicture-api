@@ -172,7 +172,7 @@
 
       <!-- buy sell button and summary -->
       <div class="action-box">
-        <button id="executeBtn" class="action-btn">Execute Swap</button>
+        <button id="executeBtn" class="action-btn">Buy</button>
         <div id="swapSummary" class="summary-container">
           <div id="summaryAmount" class="summary-amount">
             <!-- JS will fill this -->
@@ -290,6 +290,31 @@
           <div class="swiper-wrapper" id="cardCarousel">
             <!-- JS will inject slides here as `<div class="swiper-slide">…</div>` -->
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="notificationModal" class="modal" style="display: none">
+      <div class="modal-overlay" data-close></div>
+      <div class="modal-content notification-modal-content">
+        <button class="modal-close" data-close>&times;</button>
+        <div class="modal-header">Confirm Swap</div>
+        <div class="notification-modal-body">
+          <div class="notification-icon">
+            <img
+              id="notificationIconImg"
+              src="css/svgs/success.svg"
+              alt="icon"
+              width="56"
+              height="56"
+            />
+          </div>
+          <div class="notification-message">
+            The transaction cannot succeed due to error: execution reverted:
+            PancakeRouter: <br />
+            <b>INSUFFICIENT_OUTPUT_AMOUNT.</b>
+          </div>
+          <button class="notification-dismiss-btn" data-close>Dismiss</button>
         </div>
       </div>
     </div>

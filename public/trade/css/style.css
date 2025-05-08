@@ -7,6 +7,8 @@
   --regular-blue: #3062f7;
   --dark-blue: #001b70;
   --dark-blue-light: #1a2a80;
+  --sell-red: #dc3545;
+  --buy-green: #28a745;
 }
 * {
   margin: 0;
@@ -626,7 +628,7 @@ footer {
   justify-content: center;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5); /* dim backdrop */
+  background: rgba(0, 0, 0, 0.4); /* dim backdrop */
   z-index: 999;
 }
 
@@ -643,7 +645,7 @@ footer {
 .modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .modal-content {
@@ -780,4 +782,130 @@ footer {
     transform: scale(1.08) translateY(-8px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
   }
+}
+
+/* Notification Modal Styles */
+#notificationModal .modal-content.notification-modal-content {
+  background: var(--white-blue);
+  max-width: 600px;
+  width: 90%;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  padding: 0 0 2rem 0;
+}
+
+#notificationModal .modal-header {
+  padding-top: 1rem;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: var(--dark-blue);
+  margin-bottom: 0.5rem;
+}
+
+.notification-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem 0 1.5rem;
+}
+
+.notification-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin-bottom: 18px;
+}
+
+.notification-message {
+  color: var(--dark-blue);
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.notification-message b {
+  color: var(--regular-blue);
+}
+
+.notification-dismiss-btn {
+  background: var(--dark-blue);
+  color: var(--white-blue);
+  border: none;
+  border-radius: 12px;
+  padding: 10px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+
+.notification-dismiss-btn:hover {
+  background: var(--regular-blue);
+}
+
+#notificationModal .modal-overlay {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* Modal close button color for notification modal */
+#notificationModal .modal-close {
+  color: var(--dark-blue);
+}
+
+@keyframes modalFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal.open .modal-content,
+.modal[style*="display: flex"] .modal-content,
+.modal[style*="display: block"] .modal-content {
+  animation: modalFadeIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes tokenModalSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#tokenModal.open .modal-content,
+#tokenModal[style*="display: flex"] .modal-content,
+#tokenModal[style*="display: block"] .modal-content {
+  animation: tokenModalSlideUp 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Keep the general modal animation for other modals */
+.modal.open .modal-content,
+.modal[style*="display: flex"] .modal-content,
+.modal[style*="display: block"] .modal-content {
+  animation: modalFadeIn 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
