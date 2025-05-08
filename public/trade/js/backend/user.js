@@ -16,10 +16,11 @@ export async function displayUserMarketData() {
   handleWalletBalance();
 }
 
-async function fetchUserMarketData(userId) {
+async function fetchUserMarketData() {
   const params = new URLSearchParams(window.location.search);
   const event_id = params.get("event_id");
   const user_token = params.get("user_token");
+  const user_id = params.get("uid");
 
   if (!user_token) {
     console.error("No user token found in URL");
