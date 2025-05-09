@@ -127,7 +127,7 @@ async function buyEvent(req, res) {
 }
 
 async function sellEvent(req, res) {
-  const { user_id, event_id, shares, choice, b_constant } = req.body;
+  const { user_id, event_id, shares, choice, b_const } = req.body;
 
   const client = await pool.connect();
 
@@ -146,6 +146,11 @@ async function sellEvent(req, res) {
 
     const event = eventRes.rows[0];
     const shares_data = event.shares_data;
+    const rewards_pool = event.rewards_pool;
+
+    const b_constant = b_const || event.b_constant;
+
+    console.log(shares_data, rewards_pool, b_constant, choice, shares);
 
     // Safety check: avoid negative share pool
     if ((shares_data[choice] || 0) < shares) {
@@ -160,8 +165,11 @@ async function sellEvent(req, res) {
       shares_data,
       b_constant,
       choice,
-      shares
+      shares,
+      rewards_pool
     );
+
+    console.log(rawPayout, fee, payout, newShares);
 
     // Update the pool
     await client.query(
@@ -212,7 +220,7 @@ async function sellEvent(req, res) {
       amountShares: shares,
       action: "sell",
       rawPayout,
-      fee,
+      fees: fee,
       payout,
       oldShares: shares_data,
       newShares,

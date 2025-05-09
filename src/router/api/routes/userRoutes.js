@@ -12,8 +12,13 @@ const router = express.Router();
 // GET /api/users/positions/open/:userId
 router.get("/positions/open/:userId", openPositions);
 
-// GET /api/users/market_data
-router.post("/market_data", authenticateUser, getUserMarketData);
+if (process.env.NODE_ENV === "production") {
+  // GET /api/users/market_data
+  router.post("/market_data", authenticateUser, getUserMarketData);
+} else {
+  // GET /api/users/market_data
+  router.post("/market_data", getUserMarketData);
+}
 
 // GET /api/users/updateAmountInput
 router.get("/updateAmountInput", updateAmountInput);

@@ -19,6 +19,10 @@ router.post("/createUserData", authenticateApiKey, createUserData);
 router.post("/rotateToken", authenticateApiKey, rotateToken);
 
 // POST /api/private/trade
-router.post("/trade", authenticateUser, eventReceive);
+if (process.env.NODE_ENV === "production") {
+  router.post("/trade", authenticateUser, eventReceive);
+} else {
+  router.post("/trade", eventReceive);
+}
 
 export default router;
