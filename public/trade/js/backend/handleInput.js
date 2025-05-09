@@ -1,11 +1,3 @@
-import {
-  sellSharesToToken,
-  sellTokensToShares,
-  buySharesToToken,
-  buyTokenToShares,
-  calculateMarketPrices,
-} from "./calculations.js";
-
 import { startAutoRefresh } from "../main.js";
 
 function fillSummary(averagePrice, fee, inputAmount, mode) {
@@ -18,14 +10,17 @@ function fillSummary(averagePrice, fee, inputAmount, mode) {
 
   if (!fromBtn || !toBtn || !summary || !summaryAmt || !summaryFee) return;
 
-  const fromSymbol =
-    fromBtn.querySelector(".swap-symbol")?.textContent || "Token";
-  const toSymbol = toBtn.querySelector(".swap-symbol")?.textContent || "Token";
+  // const fromSymbol =
+  //   fromBtn.querySelector(".swap-symbol")?.textContent || "Choice";
+  // const toSymbol = toBtn.querySelector(".swap-symbol")?.textContent || "Choice";
+
+  // const choiceSymbol = mode === "buy" ? toSymbol : fromSymbol;
+  // const tokenSymbol = mode === "buy" ? fromSymbol : toSymbol;
 
   const summaryLeft = `${
-    mode === "buy" ? "Avg." : ""
-  } 1 <span>${toSymbol}</span>`;
-  const summaryRight = `${averagePrice} <span>${fromSymbol}</span>`;
+    mode === "buy" ? "Avg." : "Avg."
+  } 1 <span> Share </span>`;
+  const summaryRight = `${averagePrice} <span>Token</span>`;
 
   summaryAmt.innerHTML = `
       <button class="summary-btn" id="refreshBtn" type="button" aria-label="Refresh prices">
@@ -59,101 +54,80 @@ function fillSummary(averagePrice, fee, inputAmount, mode) {
   }
 }
 
-function calculateTokenToSharesBuyInput() {
+async function calculateTokenToSharesBuyInput() {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
 
-  const tokenAmount = spendInput.value || 0;
-  const { fee, shares, averagePrice } = buyTokenToShares(tokenAmount);
+  const amount = spendInput.value;
+  const action = "buy";
+  const type = "tokens";
 
-  getInput.value = shares;
-  fillSummary(averagePrice, fee, tokenAmount, "buy");
+  const swapResult = await handleSwapPrices(amount, action, type);
+
+  window.sharesAmount = swapResult.amountEquivalent;
+  getInput.value = swapResult.amountEquivalent;
+  fillSummary(swapResult.averagePrice, swapResult.fee, amount, "buy");
 }
 
-function calculateSharesToTokenBuyInput() {
+async function calculateSharesToTokenBuyInput() {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
 
   const sharesToReceive = parseInt(getInput.value);
-  const { totalCost, fee, averagePrice } = buySharesToToken(sharesToReceive);
+  const amount = sharesToReceive;
+  const action = "buy";
+  const type = "shares";
 
-  spendInput.value = totalCost;
-  fillSummary(averagePrice, fee, sharesToReceive, "buy");
+  const swapResult = await handleSwapPrices(amount, action, type);
+
+  window.sharesAmount = swapResult.sharesToReceive;
+  spendInput.value = swapResult.amountEquivalent;
+  fillSummary(swapResult.averagePrice, swapResult.fee, sharesToReceive, "buy");
 }
 
-function calculateSharesToTokenSellInput() {
+async function calculateSharesToTokenSellInput() {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
 
   const sharesToReceive = parseInt(spendInput.value);
-  const { fee, netRefund } = sellSharesToToken(sharesToReceive);
+  const action = "sell";
+  const type = "shares";
 
-  getInput.value = netRefund;
+  const swapResult = await handleSwapPrices(sharesToReceive, action, type);
 
-  const defaultChoice = window.defaultChoice;
-  const currentPrices = calculateMarketPrices(defaultChoice, -sharesToReceive);
-  const currentPrice = currentPrices[defaultChoice];
-
-  fillSummary(currentPrice, fee, sharesToReceive, "sell");
+  window.sharesAmount = swapResult.sharesToReceive;
+  getInput.value = swapResult.amountEquivalent;
+  fillSummary(swapResult.averagePrice, swapResult.fee, sharesToReceive, "sell");
 }
 
-function calculateTokenToSharesSellInput() {
+async function calculateTokenToSharesSellInput() {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
 
   const tokenAmount = getInput.value;
-  const { fee, shares } = sellTokensToShares(tokenAmount);
+  const action = "sell";
+  const type = "tokens";
 
-  spendInput.value = shares;
+  const swapResult = await handleSwapPrices(tokenAmount, action, type);
 
-  const defaultChoice = window.defaultChoice;
-  const currentPrices = calculateMarketPrices(defaultChoice, -shares);
-  const currentPrice = currentPrices[defaultChoice];
-
-  fillSummary(currentPrice, fee, tokenAmount, "sell");
+  window.sharesAmount = swapResult.amountEquivalent;
+  spendInput.value = swapResult.amountEquivalent;
+  fillSummary(swapResult.averagePrice, swapResult.fee, tokenAmount, "sell");
 }
+
+let calculationTimeout;
 
 export function handleInput(event) {
   handleSyntax(event);
 
-  let btn, otherInput;
-  if (event.target.id === "fromAmount") {
-    btn = document.getElementById("fromAssetBtn");
-    otherInput = document.getElementById("toAmount");
-    window.lastModifiedInput = "from";
-  } else if (event.target.id === "toAmount") {
-    btn = document.getElementById("toAssetBtn");
-    otherInput = document.getElementById("fromAmount");
-    window.lastModifiedInput = "to";
-  }
+  window.lastModifiedInput = event.target.id.replace("Amount", "");
 
-  const summary = document.getElementById("swapSummary");
   const toggle = document.getElementById("buySellToggle");
   const isBuy = toggle && toggle.classList.contains("buy");
 
-  const label = btn.querySelector(".swap-symbol").textContent;
+  const toggleState = isBuy ? "buy" : "sell";
 
-  if (!event.target.value) {
-    otherInput.value = "";
-    summary.classList.remove("visible");
-    updatePlaceholder(document.getElementById("fromAmount"));
-    updatePlaceholder(document.getElementById("toAmount"));
-    return;
-  }
-
-  if (isBuy) {
-    if (label === "Token") {
-      calculateTokenToSharesBuyInput();
-    } else {
-      calculateSharesToTokenBuyInput();
-    }
-  } else {
-    if (label === "Token") {
-      calculateTokenToSharesSellInput();
-    } else {
-      calculateSharesToTokenSellInput();
-    }
-  }
+  handleCalculationOfInput(toggleState);
 }
 
 function handleSyntax(e) {
@@ -205,30 +179,79 @@ function updatePlaceholder(input) {
 export function handleCalculationOfInput(mode) {
   const spendInput = document.getElementById("fromAmount");
   const getInput = document.getElementById("toAmount");
+  const loadingElement = document.querySelector(".balance-loading");
+  const summary = document.getElementById("swapSummary");
+  const executeBtn = document.getElementById("executeBtn");
 
-  if (spendInput.value <= 0 || getInput.value <= 0) {
-    spendInput.value = "";
-    getInput.value = "";
+  executeBtn.disabled = true;
+  summary.classList.remove("visible");
 
+  // Only check the input that was modified
+  const modifiedInput =
+    window.lastModifiedInput === "from" ? spendInput : getInput;
+  const otherInput =
+    window.lastModifiedInput === "from" ? getInput : spendInput;
+
+  if (!modifiedInput.value || modifiedInput.value === "0") {
+    otherInput.value = "";
     updatePlaceholder(document.getElementById("fromAmount"));
     updatePlaceholder(document.getElementById("toAmount"));
+    loadingElement.style.display = "none";
+    clearTimeout(calculationTimeout);
     return;
   }
 
-  if (mode === "buy") {
-    if (window.lastModifiedInput === "from") {
-      calculateTokenToSharesBuyInput();
-    } else if (window.lastModifiedInput === "to") {
-      calculateSharesToTokenBuyInput();
-    }
-  } else if (mode === "sell") {
-    if (window.lastModifiedInput === "from") {
-      calculateSharesToTokenSellInput();
-    } else if (window.lastModifiedInput === "to") {
-      calculateTokenToSharesSellInput();
-    }
+  // Show loading state
+  loadingElement.style.display = "block";
+
+  if (calculationTimeout) {
+    clearTimeout(calculationTimeout);
   }
 
-  updatePlaceholder(document.getElementById("fromAmount"));
-  updatePlaceholder(document.getElementById("toAmount"));
+  calculationTimeout = setTimeout(async () => {
+    try {
+      if (mode === "buy") {
+        if (window.lastModifiedInput === "from") {
+          await calculateTokenToSharesBuyInput();
+        } else if (window.lastModifiedInput === "to") {
+          await calculateSharesToTokenBuyInput();
+        }
+      } else if (mode === "sell") {
+        if (window.lastModifiedInput === "from") {
+          await calculateSharesToTokenSellInput();
+        } else if (window.lastModifiedInput === "to") {
+          await calculateTokenToSharesSellInput();
+        }
+      }
+    } catch (error) {
+      console.error("Error during calculation:", error);
+    } finally {
+      mode === "buy"
+        ? (executeBtn.style.backgroundColor = "#28a745")
+        : (executeBtn.style.backgroundColor = "#dc3545");
+      // Hide loading state after calculations are done
+      loadingElement.style.display = "none";
+      executeBtn.disabled = false;
+    }
+  }, 1000);
+}
+
+export async function handleSwapPrices(amount, action, type) {
+  const choice = window.defaultChoice;
+  const sharesData = window.sharesData;
+  const bConstant = window.bConstant;
+  const rewardsPool = window.rewardsPool;
+
+  const res = await fetch(
+    `/api/users/updateAmountInput?amount=${amount}&action=${action}&type=${type}&choice=${choice}&shares_data=${JSON.stringify(
+      sharesData
+    )}&b_constant=${bConstant}&rewards_pool=${rewardsPool}`
+  );
+  const data = await res.json();
+
+  if (!data.ok) {
+    console.log(data);
+  }
+
+  return data;
 }

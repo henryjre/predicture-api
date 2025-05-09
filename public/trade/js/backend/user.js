@@ -1,6 +1,11 @@
+import { showNotificationModal } from "../frontend/modal.js";
+import { handleCalculationOfInput } from "./handleInput.js";
+
 export async function displayUserMarketData() {
   const userMarketData = await fetchUserMarketData(window.user_id);
   const { ok, balance, openPositions } = userMarketData;
+
+  console.log(userMarketData);
 
   if (!ok || Object.keys(openPositions).length === 0) {
     console.error("Error fetching user market data or no open positions");
@@ -19,22 +24,20 @@ export async function displayUserMarketData() {
 async function fetchUserMarketData() {
   const params = new URLSearchParams(window.location.search);
   const event_id = params.get("event_id");
-  const user_token = params.get("user_token");
   const user_id = params.get("uid");
 
-  if (!user_token) {
-    console.error("No user token found in URL");
-    return { ok: false, error: "No user token provided" };
-  }
+  // if (!user_id) {
+  //   console.error("No user ID found in URL");
+  //   return (window.location.href = "/html/error?id=5");
+  // }
 
   const res = await fetch(`/api/users/market_data`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${user_token}`,
     },
     body: JSON.stringify({
-      user_id: userId,
+      user_id: user_id,
       event_id: event_id,
     }),
   });
@@ -50,5 +53,63 @@ export function handleWalletBalance(toggle = window.toggleMode) {
     balanceElement.textContent = window.userBalance;
   } else {
     balanceElement.textContent = window.openPositions[choice] || "0";
+  }
+}
+
+async function postTrade() {
+  const params = new URLSearchParams(window.location.search);
+  const event_id = params.get("event_id");
+  const user_id = params.get("uid");
+
+  const action = window.toggleMode;
+  const sharesAmount = window.sharesAmount;
+  const choice = window.defaultChoice;
+  const b_const = window.bConstant;
+
+  console.log(user_id, event_id, action, sharesAmount, choice, b_const);
+
+  const res = await fetch(`/api/private/trade`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user_id: user_id,
+      event_id: event_id,
+      action: action,
+      shares: sharesAmount,
+      choice: choice,
+      b_const: b_const,
+    }),
+  });
+
+  const result = await res.json();
+  return result;
+}
+
+export async function handleTrade(e) {
+  const button = e.target;
+  if (button.classList.contains("loading")) return;
+
+  button.classList.add("loading");
+
+  try {
+    const tradeEvent = await postTrade();
+
+    if (!tradeEvent.ok) {
+      throw new Error(tradeEvent.message);
+    }
+
+    await showNotificationModal(tradeEvent);
+    handleCalculationOfInput(window.toggleMode);
+  } catch (error) {
+    const tradeEvent = {
+      ok: false,
+      message: error.message,
+    };
+    console.error("Error in handleTrade:", error);
+    await showNotificationModal(tradeEvent);
+  } finally {
+    button.classList.remove("loading");
   }
 }
