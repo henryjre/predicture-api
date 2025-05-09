@@ -105,6 +105,10 @@ async function buyEvent(req, res) {
     // ("------------------------------------------------------------");
 
     res.status(200).json({
+      ok: true,
+      choice,
+      action: "buy",
+      amountShares: shares,
       rawCost,
       fees: fee,
       totalCost: cost,
@@ -203,6 +207,10 @@ async function sellEvent(req, res) {
     // console.log("------------------------------------------------------------");
 
     res.status(200).json({
+      ok: true,
+      choice,
+      amountShares: shares,
+      action: "sell",
       rawPayout,
       fee,
       payout,
