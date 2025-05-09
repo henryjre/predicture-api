@@ -18,7 +18,7 @@ router.post("/createUserData", authenticateApiKey, createUserData);
 // POST /api/private/rotateToken
 router.post("/rotateToken", authenticateApiKey, rotateToken);
 
-// POST /api/events/trade
+// POST /api/private/trade
 router.post("/trade", authenticateUser, eventReceive);
 
 export default router;
