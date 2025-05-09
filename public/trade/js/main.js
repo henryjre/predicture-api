@@ -1,5 +1,5 @@
-import { setupBuySellToggle } from "./frontend/ui.js";
-import { initModal } from "./frontend/modal.js";
+import { setupButtons } from "./frontend/ui.js";
+import { initModal, showNotificationModal } from "./frontend/modal.js";
 import { createChoiceSlide } from "./frontend/swiper.js";
 import { fetchCurrentMarket, updateUrlChoice } from "./backend/api.js";
 import {
@@ -61,7 +61,7 @@ async function loadEventTitle() {
 
 export async function startAutoRefresh() {
   // Animate refresh icon
-  const refreshLoader = document.getElementById("receive-balance-loading");
+  const refreshLoader = document.querySelector(".balance-loading");
 
   refreshLoader.style.display = "block";
 
@@ -69,6 +69,7 @@ export async function startAutoRefresh() {
 
   if (!result?.ok) return;
 
+  await displayUserMarketData();
   handleCalculationOfInput(window.toggleMode);
 
   setTimeout(() => {
@@ -82,7 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadEventTitle();
 
-  setupBuySellToggle();
+  setupButtons();
   await displayUserMarketData();
 
   // setInterval(async () => {
