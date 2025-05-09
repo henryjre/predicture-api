@@ -123,6 +123,7 @@
                 fill="var(--dark-blue)"
               />
             </svg>
+            <span class="balance-loading" style="display: none"></span>
           </span>
         </div>
         <div
@@ -134,9 +135,6 @@
           "
         >
           <span>You will receive</span>
-          <span id="receive-balance-loading" style="display: none">
-            <span class="balance-loading"></span>
-          </span>
         </div>
         <div class="swap-section swap-to">
           <div class="swap-row">
@@ -172,7 +170,10 @@
 
       <!-- buy sell button and summary -->
       <div class="action-box">
-        <button id="executeBtn" class="action-btn">Buy</button>
+        <button id="executeBtn" class="action-btn" disabled>
+          <span class="btn-text">Buy</span>
+          <div class="loader"></div>
+        </button>
         <div id="swapSummary" class="summary-container">
           <div id="summaryAmount" class="summary-amount">
             <!-- JS will fill this -->
@@ -314,7 +315,33 @@
             PancakeRouter: <br />
             <b>INSUFFICIENT_OUTPUT_AMOUNT.</b>
           </div>
-          <button class="notification-dismiss-btn" data-close>Dismiss</button>
+          <div class="notification-swap-details">
+            <div class="swap-detail-row">
+              <span class="swap-detail-label" id="priceLabel"
+                >Average Price</span
+              >
+              <span class="swap-detail-value" id="priceValue">0</span>
+            </div>
+            <div class="swap-detail-row">
+              <span class="swap-detail-label" id="receivedLabel"
+                >Shares Received</span
+              >
+              <span class="swap-detail-value" id="receivedValue">0 Shares</span>
+            </div>
+            <div class="swap-detail-row">
+              <span class="swap-detail-label">Price impact</span>
+              <span class="swap-detail-value" id="priceImpactValue"
+                >&lt; 0.01%</span
+              >
+            </div>
+            <div class="swap-detail-row">
+              <span class="swap-detail-label">Transaction Fee</span>
+              <span class="swap-detail-value" id="feeValue">0.00 Token</span>
+            </div>
+          </div>
+          <button class="notification-dismiss-btn" id="dismissBtn" data-close>
+            Dismiss
+          </button>
         </div>
       </div>
     </div>
