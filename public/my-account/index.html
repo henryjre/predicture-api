@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Account | Predicture</title>
+
+    <link
+      rel="icon"
+      href="/html/assets/favicon.png"
+      sizes="32x32"
+      type="image/png"
+    />
+
+    <!-- Poppins -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header id="stickyHeader">
+      <div class="header-container">
+        <div class="header-center">
+          <img src="/html/assets/logo-white.png" alt="Logo" class="logo" />
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="container overview">
+        <div class="name-container">
+          <h1>Account Details</h1>
+        </div>
+        <div class="user-info-row">
+          <div class="uid-container">
+            <p>UID: <span id="uid">1234567890</span></p>
+            <button class="copy-btn" title="Copy UID">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M16 12.9V17.1C16 20.6 14.6 22 11.1 22H6.9C3.4 22 2 20.6 2 17.1V12.9C2 9.4 3.4 8 6.9 8H11.1C14.6 8 16 9.4 16 12.9Z"
+                  fill="#001b70"
+                />
+                <path
+                  d="M17.0998 2H12.8998C9.81668 2 8.37074 3.09409 8.06951 5.73901C8.00649 6.29235 8.46476 6.75 9.02167 6.75H11.0998C15.2998 6.75 17.2498 8.7 17.2498 12.9V14.9781C17.2498 15.535 17.7074 15.9933 18.2608 15.9303C20.9057 15.629 21.9998 14.1831 21.9998 11.1V6.9C21.9998 3.4 20.5998 2 17.0998 2Z"
+                  fill="#001b70"
+                />
+              </svg>
+              <span class="tooltip">Copy to clipboard</span>
+            </button>
+          </div>
+          <div class="date-joined-container">
+            <p>Joined: <span id="dateJoined">May 10, 2025</span></p>
+          </div>
+        </div>
+
+        <div class="overview-container">
+          <div class="overview-box balance">
+            <div class="overview-box-title">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M6 8H10"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M20.8333 9H18.2308C16.4465 9 15 10.3431 15 12C15 13.6569 16.4465 15 18.2308 15H20.8333C20.9167 15 20.9583 15 20.9935 14.9979C21.5328 14.965 21.9623 14.5662 21.9977 14.0654C22 14.0327 22 13.994 22 13.9167V10.0833C22 10.006 22 9.96726 21.9977 9.9346C21.9623 9.43384 21.5328 9.03496 20.9935 9.00214C20.9583 9 20.9167 9 20.8333 9Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M20.965 9C20.8873 7.1277 20.6366 5.97975 19.8284 5.17157C18.6569 4 16.7712 4 13 4L10 4C6.22876 4 4.34315 4 3.17157 5.17157C2 6.34315 2 8.22876 2 12C2 15.7712 2 17.6569 3.17157 18.8284C4.34315 20 6.22876 20 10 20H13C16.7712 20 18.6569 20 19.8284 18.8284C20.6366 18.0203 20.8873 16.8723 20.965 15"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M17.9912 12H18.0002"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <p class="overview-box-title-text">Token Balance</p>
+            </div>
+            <div class="overview-box-content">
+              <span class="overview-box-value" id="tokenBalance">0.00</span>
+            </div>
+          </div>
+          <div class="overview-box pnl">
+            <div class="overview-box-title">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  xmlns="http://www.w3.org/2000/svg"
+                  d="M22 7L14.6203 14.3347C13.6227 15.3263 13.1238 15.822 12.5051 15.822C11.8864 15.8219 11.3876 15.326 10.3902 14.3342L10.1509 14.0962C9.15254 13.1035 8.65338 12.6071 8.03422 12.6074C7.41506 12.6076 6.91626 13.1043 5.91867 14.0977L2 18M22 7V12.5458M22 7H16.4179"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <p class="overview-box-title-text">Profit/Loss</p>
+            </div>
+            <div class="overview-box-content">
+              <span class="overview-box-value" id="pnl">0.00</span>
+            </div>
+          </div>
+
+          <div class="overview-box positions-value">
+            <div class="overview-box-title">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M18.9553 1.25C18.5224 1.24995 18.1256 1.24991 17.8028 1.29331C17.4473 1.3411 17.0716 1.45355 16.7626 1.76257C16.4535 2.07159 16.3411 2.44732 16.2933 2.8028C16.2499 3.12561 16.25 3.52244 16.25 3.95525V17.0448C16.25 17.4776 16.2499 17.8744 16.2933 18.1972C16.3411 18.5527 16.4535 18.9284 16.7626 19.2374C17.0716 19.5465 17.4473 19.6589 17.8028 19.7067C18.1256 19.7501 18.5224 19.7501 18.9553 19.75H19.0448C19.4776 19.7501 19.8744 19.7501 20.1972 19.7067C20.5527 19.6589 20.9284 19.5465 21.2374 19.2374C21.5465 18.9284 21.6589 18.5527 21.7067 18.1972C21.7501 17.8744 21.7501 17.4776 21.75 17.0448V3.95526C21.7501 3.52245 21.7501 3.12561 21.7067 2.8028C21.6589 2.44732 21.5465 2.07159 21.2374 1.76257C20.9284 1.45355 20.5527 1.3411 20.1972 1.29331C19.8744 1.24991 19.4776 1.24995 19.0448 1.25H18.9553ZM17.8257 2.82187L17.8232 2.82324L17.8219 2.82568C17.8209 2.82761 17.8192 2.83093 17.8172 2.83597C17.8082 2.85775 17.7929 2.90611 17.7799 3.00267C17.7516 3.21339 17.75 3.5074 17.75 4.00001V17C17.75 17.4926 17.7516 17.7866 17.7799 17.9973C17.7929 18.0939 17.8082 18.1423 17.8172 18.164C17.8192 18.1691 17.8209 18.1724 17.8219 18.1743L17.8232 18.1768L17.8257 18.1781C17.8265 18.1786 17.8276 18.1791 17.8289 18.1797C17.8307 18.1806 17.8331 18.1817 17.836 18.1828C17.8578 18.1918 17.9061 18.2071 18.0027 18.2201C18.2134 18.2484 18.5074 18.25 19 18.25C19.4926 18.25 19.7866 18.2484 19.9973 18.2201C20.0939 18.2071 20.1423 18.1918 20.164 18.1828C20.1691 18.1808 20.1724 18.1792 20.1743 18.1781L20.1768 18.1768L20.1781 18.1743C20.1792 18.1724 20.1808 18.1691 20.1828 18.164C20.1918 18.1423 20.2071 18.0939 20.2201 17.9973C20.2484 17.7866 20.25 17.4926 20.25 17V4.00001C20.25 3.5074 20.2484 3.21339 20.2201 3.00267C20.2071 2.90611 20.1918 2.85775 20.1828 2.83597C20.1808 2.83093 20.1792 2.82761 20.1781 2.82568L20.1768 2.82324L20.1743 2.82187C20.1724 2.82086 20.1691 2.81924 20.164 2.81717C20.1423 2.80821 20.0939 2.79291 19.9973 2.77993C19.7866 2.7516 19.4926 2.75001 19 2.75001C18.5074 2.75001 18.2134 2.7516 18.0027 2.77993C17.9061 2.79291 17.8578 2.80821 17.836 2.81717C17.8309 2.81924 17.8276 2.82086 17.8257 2.82187Z"
+                  fill="currentColor"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M11.9553 4.25H12.0448C12.4776 4.24995 12.8744 4.24991 13.1972 4.29331C13.5527 4.3411 13.9284 4.45355 14.2374 4.76257C14.5465 5.07159 14.6589 5.44732 14.7067 5.8028C14.7501 6.12561 14.7501 6.52243 14.75 6.95524V17.0448C14.7501 17.4776 14.7501 17.8744 14.7067 18.1972C14.6589 18.5527 14.5465 18.9284 14.2374 19.2374C13.9284 19.5465 13.5527 19.6589 13.1972 19.7067C12.8744 19.7501 12.4776 19.7501 12.0448 19.75H11.9553C11.5225 19.7501 11.1256 19.7501 10.8028 19.7067C10.4473 19.6589 10.0716 19.5465 9.76257 19.2374C9.45355 18.9284 9.3411 18.5527 9.29331 18.1972C9.24991 17.8744 9.24995 17.4776 9.25 17.0448V6.95526C9.24995 6.52244 9.24991 6.12561 9.29331 5.8028C9.3411 5.44732 9.45355 5.07159 9.76257 4.76257C10.0716 4.45355 10.4473 4.3411 10.8028 4.29331C11.1256 4.24991 11.5224 4.24995 11.9553 4.25ZM10.8232 5.82324L10.8257 5.82187L10.8234 18.1768L10.8219 18.1743C10.8209 18.1724 10.8192 18.1691 10.8172 18.164C10.8082 18.1423 10.7929 18.0939 10.7799 17.9973C10.7516 17.7866 10.75 17.4926 10.75 17V7.00001C10.75 6.5074 10.7516 6.21339 10.7799 6.00267C10.7929 5.90611 10.8082 5.85775 10.8172 5.83597C10.8192 5.83093 10.8209 5.82761 10.8219 5.82568L10.8232 5.82324ZM10.8234 18.1768L10.8257 5.82187L10.8295 5.81999L10.836 5.81717C10.8578 5.80821 10.9061 5.79291 11.0027 5.77993C11.2134 5.7516 11.5074 5.75001 12 5.75001C12.4926 5.75001 12.7866 5.7516 12.9973 5.77993C13.0939 5.79291 13.1423 5.80821 13.164 5.81717C13.1691 5.81924 13.1724 5.82086 13.1743 5.82187L13.1768 5.82324L13.1781 5.82568C13.1792 5.82761 13.1808 5.83093 13.1828 5.83597C13.1918 5.85775 13.2071 5.90611 13.2201 6.00267C13.2484 6.21339 13.25 6.5074 13.25 7.00001V17C13.25 17.4926 13.2484 17.7866 13.2201 17.9973C13.2071 18.0939 13.1918 18.1423 13.1828 18.164C13.1808 18.1691 13.1792 18.1724 13.1781 18.1743L13.1768 18.1768L13.1743 18.1781C13.1731 18.1788 13.1712 18.1797 13.1686 18.1809C13.1673 18.1815 13.1658 18.1821 13.164 18.1828C13.1423 18.1918 13.0939 18.2071 12.9973 18.2201C12.7866 18.2484 12.4926 18.25 12 18.25C11.5074 18.25 11.2134 18.2484 11.0027 18.2201C10.9061 18.2071 10.8578 18.1918 10.836 18.1828C10.8309 18.1808 10.8276 18.1792 10.8257 18.1781L10.8234 18.1768Z"
+                  fill="currentColor"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.95526 8.25C4.52244 8.24995 4.12561 8.24991 3.8028 8.29331C3.44732 8.3411 3.07159 8.45355 2.76257 8.76257C2.45355 9.07159 2.3411 9.44732 2.29331 9.8028C2.24991 10.1256 2.24995 10.5224 2.25 10.9553V17.0448C2.24995 17.4776 2.24991 17.8744 2.29331 18.1972C2.3411 18.5527 2.45355 18.9284 2.76257 19.2374C3.07159 19.5465 3.44732 19.6589 3.8028 19.7067C4.12561 19.7501 4.52245 19.7501 4.95526 19.75H5.04475C5.47757 19.7501 5.8744 19.7501 6.19721 19.7067C6.5527 19.6589 6.92842 19.5465 7.23744 19.2374C7.54647 18.9284 7.65891 18.5527 7.70671 18.1972C7.75011 17.8744 7.75006 17.4776 7.75001 17.0448V10.9553C7.75006 10.5224 7.75011 10.1256 7.70671 9.8028C7.65891 9.44732 7.54647 9.07159 7.23744 8.76257C6.92842 8.45355 6.5527 8.3411 6.19721 8.29331C5.8744 8.24991 5.47757 8.24995 5.04476 8.25H4.95526ZM3.82568 9.82187L3.82324 9.82324L3.82187 9.82568C3.82086 9.82761 3.81924 9.83093 3.81717 9.83597C3.80821 9.85775 3.79291 9.90611 3.77993 10.0027C3.7516 10.2134 3.75001 10.5074 3.75001 11V17C3.75001 17.4926 3.7516 17.7866 3.77993 17.9973C3.79291 18.0939 3.80821 18.1423 3.81717 18.164C3.81924 18.1691 3.82086 18.1724 3.82187 18.1743L3.82284 18.1761L3.82568 18.1781C3.82761 18.1792 3.83093 18.1808 3.83597 18.1828C3.85775 18.1918 3.90611 18.2071 4.00267 18.2201C4.21339 18.2484 4.5074 18.25 5.00001 18.25C5.49261 18.25 5.78662 18.2484 5.99734 18.2201C6.0939 18.2071 6.14226 18.1918 6.16404 18.1828C6.16909 18.1808 6.1724 18.1792 6.17434 18.1781L6.17677 18.1768L6.17815 18.1743L6.18036 18.1698L6.18285 18.164C6.19181 18.1423 6.2071 18.0939 6.22008 17.9973C6.24841 17.7866 6.25001 17.4926 6.25001 17V11C6.25001 10.5074 6.24841 10.2134 6.22008 10.0027C6.2071 9.90611 6.19181 9.85775 6.18285 9.83597C6.18077 9.83093 6.17916 9.82761 6.17815 9.82568L6.17677 9.82324L6.17434 9.82187C6.1724 9.82086 6.16909 9.81924 6.16404 9.81717C6.14226 9.8082 6.0939 9.79291 5.99734 9.77993C5.78662 9.7516 5.49261 9.75001 5.00001 9.75001C4.5074 9.75001 4.21339 9.7516 4.00267 9.77993C3.90611 9.79291 3.85775 9.8082 3.83597 9.81717C3.83093 9.81924 3.82761 9.82086 3.82568 9.82187Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M3.00001 21.25C2.58579 21.25 2.25001 21.5858 2.25001 22C2.25001 22.4142 2.58579 22.75 3.00001 22.75H21C21.4142 22.75 21.75 22.4142 21.75 22C21.75 21.5858 21.4142 21.25 21 21.25H3.00001Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <p class="overview-box-title-text">Positions Value</p>
+            </div>
+            <div class="overview-box-content">
+              <span class="overview-box-value" id="positionsValue">0.00</span>
+            </div>
+          </div>
+
+          <div class="overview-box volume-traded">
+            <div class="overview-box-title">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M22 22H2"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M21 22V14.5C21 13.6716 20.3284 13 19.5 13H16.5C15.6716 13 15 13.6716 15 14.5V22"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M15 22V5C15 3.58579 15 2.87868 14.5607 2.43934C14.1213 2 13.4142 2 12 2C10.5858 2 9.87868 2 9.43934 2.43934C9 2.87868 9 3.58579 9 5V22"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+                <path
+                  d="M9 22V9.5C9 8.67157 8.32843 8 7.5 8H4.5C3.67157 8 3 8.67157 3 9.5V22"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                />
+              </svg>
+              <p class="overview-box-title-text">Volume Traded</p>
+            </div>
+            <div class="overview-box-content">
+              <span class="overview-box-value" id="tokenBalance">0.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- POSITIONS AND ACTIVITY -->
+
+      <section class="container activity">
+        <div class="row-buttons" id="rowButtons">
+          <button class="row-btn" data-state="active" id="positionsBtn">
+            Positions
+          </button>
+          <button class="row-btn active" id="activityBtn">Activity</button>
+          <div class="row-btn-underline"></div>
+        </div>
+
+        <!-- MULTI-STATE BOX -->
+
+        <div class="multi-state-box">
+          <div class="state-content" id="positionsContent">
+            <div class="row-header positions">
+              <div class="row-header-text event-name">EVENT NAME</div>
+              <div class="row-header-text shares">SHARES</div>
+              <div class="row-header-text option">OPTION</div>
+              <div class="row-header-text pnl">PNL</div>
+            </div>
+
+            <div class="row-content">
+              <div class="row-container">
+                <div class="row-item">
+                  <div class="row-cell event-name">Bitcoin Halving</div>
+                  <div class="row-cell shares">10</div>
+                  <div class="row-cell option">UP</div>
+                  <div class="row-cell pnl positive">+5.00</div>
+                </div>
+                <div class="row-details">
+                  <div class="row-details-item left">
+                    <div class="rd-title mobile-text">EVENT NAME</div>
+                    <div class="rd-title">Bitcoin Halving</div>
+                    <div class="rd-title child">
+                      <div class="rd-child">
+                        Event End Date:
+                        <span>05/31/2025</span>
+                      </div>
+                      <div class="rd-child">
+                        Date Traded:
+                        <span>05/12/2025</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row-details-item right">
+                    <div class="row-details-item other-details">
+                      <div class="row-details-item shares">
+                        <div class="rd-title mobile-text">SHARES</div>
+                        <div class="rd-title">10</div>
+                        <div class="rd-title subtext">shares owned</div>
+                      </div>
+                      <div class="row-details-item option">
+                        <div class="rd-title mobile-text">OPTION</div>
+                        <div class="rd-title">UP</div>
+                      </div>
+                      <div class="row-details-item pnl">
+                        <div class="rd-title mobile-text">PNL</div>
+                        <div class="rd-title positive">+5.00</div>
+                        <div class="rd-title subtext positive">(25.57%)</div>
+                      </div>
+                    </div>
+                    <div class="rd-title child price-details">
+                      <div class="rd-child">
+                        Avg Price:
+                        <span>0.3333</span>
+                      </div>
+                      <div class="rd-child">
+                        Current Price:
+                        <span>0.5433</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row-container">
+                <div class="row-item">
+                  <div class="row-cell event-name">Bitcoin Halving</div>
+                  <div class="row-cell shares">10</div>
+                  <div class="row-cell option">UP</div>
+                  <div class="row-cell pnl positive">+5.00</div>
+                </div>
+                <div class="row-details">
+                  <div class="row-details-item left">
+                    <div class="rd-title mobile-text">EVENT NAME</div>
+                    <div class="rd-title">Bitcoin Halving</div>
+                    <div class="rd-title child">
+                      <div class="rd-child">
+                        Event End Date:
+                        <span>05/31/2025</span>
+                      </div>
+                      <div class="rd-child">
+                        Date Traded:
+                        <span>05/12/2025</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row-details-item right">
+                    <div class="row-details-item other-details">
+                      <div class="row-details-item shares">
+                        <div class="rd-title mobile-text">SHARES</div>
+                        <div class="rd-title">10</div>
+                        <div class="rd-title subtext">shares owned</div>
+                      </div>
+                      <div class="row-details-item option">
+                        <div class="rd-title mobile-text">OPTION</div>
+                        <div class="rd-title">UP</div>
+                      </div>
+                      <div class="row-details-item pnl">
+                        <div class="rd-title mobile-text">PNL</div>
+                        <div class="rd-title positive">+5.00</div>
+                        <div class="rd-title subtext positive">(25.57%)</div>
+                      </div>
+                    </div>
+                    <div class="rd-title child price-details">
+                      <div class="rd-child">
+                        Avg Price:
+                        <span>0.3333</span>
+                      </div>
+                      <div class="rd-child">
+                        Current Price:
+                        <span>0.5433</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row-container">
+                <div class="row-item">
+                  <div class="row-cell event-name">Bitcoin Halving</div>
+                  <div class="row-cell shares">10</div>
+                  <div class="row-cell option">UP</div>
+                  <div class="row-cell pnl positive">+5.00</div>
+                </div>
+                <div class="row-details">
+                  <div class="row-details-item left">
+                    <div class="rd-title mobile-text">EVENT NAME</div>
+                    <div class="rd-title">Bitcoin Halving</div>
+                    <div class="rd-title child">
+                      <div class="rd-child">
+                        Event End Date:
+                        <span>05/31/2025</span>
+                      </div>
+                      <div class="rd-child">
+                        Date Traded:
+                        <span>05/12/2025</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row-details-item right">
+                    <div class="row-details-item other-details">
+                      <div class="row-details-item shares">
+                        <div class="rd-title mobile-text">SHARES</div>
+                        <div class="rd-title">10</div>
+                        <div class="rd-title subtext">shares owned</div>
+                      </div>
+                      <div class="row-details-item option">
+                        <div class="rd-title mobile-text">OPTION</div>
+                        <div class="rd-title">UP</div>
+                      </div>
+                      <div class="row-details-item pnl">
+                        <div class="rd-title mobile-text">PNL</div>
+                        <div class="rd-title positive">+5.00</div>
+                        <div class="rd-title subtext positive">(25.57%)</div>
+                      </div>
+                    </div>
+                    <div class="rd-title child price-details">
+                      <div class="rd-child">
+                        Avg Price:
+                        <span>0.3333</span>
+                      </div>
+                      <div class="rd-child">
+                        Current Price:
+                        <span>0.5433</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Repeat for each row-item -->
+            </div>
+          </div>
+
+          <!-- ACTIVITY CONTENT -->
+          <div class="state-content" id="activityContent" style="display: none">
+            <div class="row-content" style="margin-top: 1rem">
+              <div class="row-container activity-row">
+                <div class="activity-title">Bitcoin Halving</div>
+                <div class="activity-details">
+                  <div class="ad-row">
+                    <span class="transaction-type sell">Sell</span>
+                    <span class="transaction-amount">2.00 Tokens</span>
+                  </div>
+                  <div class="ad-row">
+                    <div class="choice">
+                      <span class="choice-option">UP</span>
+                      <span class="choice-shares">10 shares</span>
+                    </div>
+                    <span class="transaction-date">10 minutes ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row-container activity-row">
+                <div class="activity-title">Token Transfer</div>
+                <div class="activity-details">
+                  <div class="ad-row">
+                    <span class="transaction-type transfer">Transfer</span>
+                    <span class="transaction-amount">10.00 Tokens</span>
+                  </div>
+                  <div class="ad-row">
+                    <div class="choice">
+                      <span class="choice-option">To</span>
+                      <span class="choice-shares">98645234728459</span>
+                    </div>
+                    <span class="transaction-date">30 minutes ago</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row-container activity-row">
+                <div class="activity-title">Bitcoin Halving</div>
+                <div class="activity-details">
+                  <div class="ad-row">
+                    <span class="transaction-type buy">Buy</span>
+                    <span class="transaction-amount">2.00 Tokens</span>
+                  </div>
+                  <div class="ad-row">
+                    <div class="choice">
+                      <span class="choice-option">UP</span>
+                      <span class="choice-shares">10 shares</span>
+                    </div>
+                    <span class="transaction-date">05/11/2025</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-container">
+        <div class="footer-left">
+          <img src="/html/assets/favicon.png" alt="Logo" class="footer-logo" />
+          <p class="footer-text">
+            Predicture - Transparent. Fair. Decentralized at heart. Your
+            predictions. Your rules. Our protocol.
+          </p>
+        </div>
+        <div class="footer-right">
+          <div class="social-links">
+            <a href="#" class="social-link">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"
+                ></path>
+              </svg>
+            </a>
+            <a href="#" class="social-link">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"
+                ></path>
+              </svg>
+            </a>
+            <a href="#" class="social-link">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path
+                  d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"
+                ></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
+            </a>
+            <a href="#" class="social-link">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
+                ></path>
+                <rect x="2" y="9" width="4" height="12"></rect>
+                <circle cx="4" cy="4" r="2"></circle>
+              </svg>
+            </a>
+          </div>
+          <div class="footer-meta">
+            <p class="footer-copyright">
+              © 2025 Predicture. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
