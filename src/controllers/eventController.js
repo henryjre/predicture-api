@@ -43,6 +43,7 @@ async function buyEvent(req, res) {
 
     const event = eventRes.rows[0];
 
+    const title = event.event_title;
     const shares_data = event.shares_data;
     const rewards_pool = event.rewards_pool;
     const databaseB = event.b_constant;
@@ -94,6 +95,23 @@ async function buyEvent(req, res) {
         shares, // +shares for buy
         cost, // +cost for buy
         fee,
+      ]
+    );
+
+    await client.query(
+      `INSERT INTO transaction_history (user_id, transaction_name, transaction_type, token_amount, transaction_details)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        user_id,
+        title,
+        "Buy",
+        -cost,
+        {
+          1: choice,
+          2: shares,
+          3: cost,
+          4: fee,
+        },
       ]
     );
 
