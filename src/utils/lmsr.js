@@ -47,13 +47,15 @@ export function calculatePurchaseCost(
     .times(multiplier)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
-  const fee = rawCost.times(feeRate).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  const fee = adjustedCost
+    .times(feeRate)
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
   const totalCost = adjustedCost
     .plus(fee)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   return {
-    rawCost: Number(rawCost.toDecimalPlaces(2, Decimal.ROUND_HALF_UP)),
+    rawCost: Number(adjustedCost),
     fee: Number(fee),
     cost: Number(totalCost), // Final amount user pays
     newShares: qAfter,
@@ -100,7 +102,7 @@ export function calculateSellPayout(
     .times(multiplier)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
-  const fee = rawPayout
+  const fee = adjustedPayout
     .times(feeRate)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
   const totalPayout = adjustedPayout
@@ -108,7 +110,7 @@ export function calculateSellPayout(
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   return {
-    rawPayout: Number(rawPayout.toDecimalPlaces(2, Decimal.ROUND_HALF_UP)),
+    rawPayout: Number(adjustedPayout),
     fee: Number(fee),
     payout: Number(totalPayout), // Final amount user receives
     newShares: qAfter,
