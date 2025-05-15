@@ -22,6 +22,8 @@ export function calculatePurchaseCost(
   rewards_pool,
   feeRate = 0.02
 ) {
+  console.log(shares, b, choice, amountToBuy, rewards_pool, feeRate);
+
   const qBefore = { ...shares };
   const qAfter = { ...shares };
 
@@ -32,16 +34,13 @@ export function calculatePurchaseCost(
   const costAfter = lmsrCost(qAfter, b);
   const rawCost = new Decimal(costAfter - costBefore); //base cost
 
-  const rewardsPoolAfter = new Decimal(rewards_pool).plus(rawCost);
+  const rewardsPoolAfter = rewards_pool.plus(rawCost);
 
-  const eps =
-    qAfter[choice] > 0
-      ? Number(
-          new Decimal(rewardsPoolAfter)
-            .div(new Decimal(qAfter[choice]))
-            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
-        )
-      : 0;
+  const eps = Number(
+    rewardsPoolAfter
+      .div(new Decimal(qAfter[choice]))
+      .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+  );
 
   const poolFeeRate = calculateBuyMultiplier(eps, rawCost);
 
@@ -95,13 +94,13 @@ export function calculateSellPayout(
   const costAfter = lmsrCost(qAfter, b);
   const rawPayout = new Decimal(costBefore - costAfter);
 
-  const rewardsPoolAfter = new Decimal(rewards_pool).minus(rawPayout);
+  const rewardsPoolAfter = rewards_pool.minus(rawPayout);
 
   const eps =
     qAfter[choice] > 0
       ? Number(
           rewardsPoolAfter
-            .div(qAfter[choice])
+            .div(new Decimal(qAfter[choice]))
             .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
         )
       : Number(
@@ -121,7 +120,7 @@ export function calculateSellPayout(
   }
 
   const fee = adjustedPayout
-    .times(feeRate)
+    .times(new Decimal(feeRate))
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   const totalPayout = adjustedPayout
@@ -130,7 +129,7 @@ export function calculateSellPayout(
 
   const averagePrice =
     totalPayout
-      .div(amountToSell)
+      .div(new Decimal(amountToSell))
       .toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
       .toNumber() || 0;
 

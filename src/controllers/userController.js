@@ -110,7 +110,7 @@ export function calculateInputSwap(req, res) {
     req.query;
 
   const sharesData = JSON.parse(shares_data);
-  const bConstant = new Decimal(b_constant);
+  const bConstant = Number(b_constant);
   const rewardsPool = new Decimal(rewards_pool);
   const amountDecimal = Math.floor(amount);
 
