@@ -28,37 +28,47 @@ export function calculatePurchaseCost(
   // Increase shares for the chosen option
   qAfter[choice] = (qAfter[choice] || 0) + amountToBuy;
 
+  const costBefore = lmsrCost(qBefore, b);
+  const costAfter = lmsrCost(qAfter, b);
+  const rawCost = new Decimal(costAfter - costBefore); //base cost
+
+  const rewardsPoolAfter = new Decimal(rewards_pool).plus(rawCost);
+
   const eps =
     qAfter[choice] > 0
       ? Number(
-          new Decimal(rewards_pool)
-            .div(qAfter[choice])
+          new Decimal(rewardsPoolAfter)
+            .div(new Decimal(qAfter[choice]))
             .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
         )
       : 0;
 
-  const multiplier = calculateBuyMultiplier(eps);
-
-  const costBefore = lmsrCost(qBefore, b);
-  const costAfter = lmsrCost(qAfter, b);
-  const rawCost = new Decimal(costAfter - costBefore);
+  const poolFeeRate = calculateBuyMultiplier(eps, rawCost);
 
   const adjustedCost = rawCost
-    .times(multiplier)
+    .times(new Decimal(1).plus(new Decimal(poolFeeRate)))
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   const fee = adjustedCost
-    .times(feeRate)
+    .times(new Decimal(feeRate))
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
   const totalCost = adjustedCost
     .plus(fee)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
+  const averagePrice =
+    totalCost
+      .div(new Decimal(amountToBuy))
+      .toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+      .toNumber() || 0;
+
   return {
     rawCost: Number(adjustedCost),
     fee: Number(fee),
-    cost: Number(totalCost), // Final amount user pays
+    cost: Number(totalCost),
     newShares: qAfter,
+    averagePrice: averagePrice,
   };
 }
 
@@ -74,19 +84,25 @@ export function calculateSellPayout(
   const qBefore = { ...shares };
   const qAfter = { ...shares };
 
-  if ((qBefore[choice] || 0) < amountToSell) {
-    throw new Error(
-      `Cannot sell more shares than are in the pool for ${choice}`
-    );
-  }
+  // if ((qBefore[choice] || 0) < amountToSell) {
+  //   throw new Error(
+  //     `Cannot sell more shares than are in the pool for ${choice}`
+  //   );
+  // }
 
   // Decrease shares for the chosen option
   qAfter[choice] -= amountToSell;
 
+  const costBefore = lmsrCost(qBefore, b);
+  const costAfter = lmsrCost(qAfter, b);
+  const rawPayout = new Decimal(costBefore - costAfter);
+
+  const rewardsPoolAfter = new Decimal(rewards_pool).minus(rawPayout);
+
   const eps =
     qAfter[choice] > 0
       ? Number(
-          new Decimal(rewards_pool)
+          rewardsPoolAfter
             .div(qAfter[choice])
             .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
         )
@@ -94,26 +110,34 @@ export function calculateSellPayout(
 
   const multiplier = calculateSellMultiplier(eps);
 
-  const costBefore = lmsrCost(qBefore, b);
-  const costAfter = lmsrCost(qAfter, b);
-  const rawPayout = new Decimal(costBefore - costAfter);
-
-  const adjustedPayout = rawPayout
-    .times(multiplier)
+  let adjustedPayout = rawPayout
+    .times(new Decimal(1).plus(new Decimal(multiplier)))
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  if (adjustedPayout.isNegative()) {
+    adjustedPayout = new Decimal(0);
+  }
 
   const fee = adjustedPayout
     .times(feeRate)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
   const totalPayout = adjustedPayout
     .minus(fee)
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+  const averagePrice =
+    totalPayout
+      .div(amountToSell)
+      .toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+      .toNumber() || 0;
 
   return {
     rawPayout: Number(adjustedPayout),
     fee: Number(fee),
     payout: Number(totalPayout), // Final amount user receives
     newShares: qAfter,
+    averagePrice: averagePrice,
   };
 }
 
@@ -141,28 +165,37 @@ export function calculateMarketPrices(shares, b) {
 }
 
 // Calculate buy multiplier based on EPS
-export function calculateBuyMultiplier(eps) {
+function calculateBuyMultiplier(eps, price) {
   const epsDecimal = new Decimal(eps);
+  const priceDecimal = new Decimal(price);
+
   if (epsDecimal.lt(1.05)) {
-    // multiplier = 1 + [0.05 + ((1.03 - eps) / 1.03) * 0.5]
-    const part = new Decimal(1.03).minus(epsDecimal).div(1.03).times(0.5);
-    const multiplier = new Decimal(1).plus(new Decimal(0.05).plus(part));
-    return Number(multiplier.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
+    if (priceDecimal.lt(epsDecimal)) {
+      const dynamicFee = new Decimal(1.05)
+        .minus(epsDecimal)
+        .div(1.05)
+        .times(0.5);
+      const fee = new Decimal(0.03).plus(dynamicFee);
+      return Number(fee.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
+    } else {
+      return 0.03;
+    }
   } else {
-    return 1.05;
+    return 0.03;
   }
 }
 
-export function calculateSellMultiplier(eps) {
+function calculateSellMultiplier(eps) {
   const epsDecimal = new Decimal(eps);
+
   if (epsDecimal.lt(1.05)) {
-    // multiplier = 1 - [0.05 + ((1.05 - eps) / 1.05) * 0.5]
-    const part = new Decimal(1.05).minus(epsDecimal).div(1.05).times(0.5);
-    const deduction = new Decimal(0.05).plus(part);
-    const multiplier = new Decimal(1).minus(deduction);
-    return Number(multiplier.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
+    const diff = epsDecimal.minus(1);
+    const fee = Decimal.min(diff, new Decimal(-0.03));
+    return Number(fee.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
   } else {
-    return 0.9;
+    const dynamicFee = new Decimal(1.05).minus(epsDecimal).div(1.05).times(0.5);
+    const fee = new Decimal(0.03).plus(dynamicFee);
+    return Number(fee.toDecimalPlaces(4, Decimal.ROUND_HALF_UP));
   }
 }
 
