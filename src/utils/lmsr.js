@@ -84,11 +84,9 @@ export function calculateSellPayout(
   const qBefore = { ...shares };
   const qAfter = { ...shares };
 
-  // if ((qBefore[choice] || 0) < amountToSell) {
-  //   throw new Error(
-  //     `Cannot sell more shares than are in the pool for ${choice}`
-  //   );
-  // }
+  if ((qBefore[choice] || 0) < amountToSell) {
+    console.log(`Selling more shares than are in the pool for ${choice}`);
+  }
 
   // Decrease shares for the chosen option
   qAfter[choice] -= amountToSell;
@@ -106,7 +104,11 @@ export function calculateSellPayout(
             .div(qAfter[choice])
             .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
         )
-      : 0;
+      : Number(
+          rewardsPoolAfter
+            .div(new Decimal(1))
+            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+        );
 
   const multiplier = calculateSellMultiplier(eps);
 
