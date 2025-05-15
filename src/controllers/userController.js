@@ -14,6 +14,8 @@ import {
   sellSharesToToken,
   buyTokenToShares,
   sellTokensToShares,
+  calculatePurchaseCost,
+  calculateSellPayout,
 } from "../utils/lmsr.js";
 
 export async function openPositions(req, res) {
@@ -101,6 +103,52 @@ export async function rotateToken(req, res) {
     console.error("Error in rotateToken:", err.message);
     res.status(500).json({ ok: false, error: err.message });
   }
+}
+
+export function calculateInputSwap(req, res) {
+  const { amount, choice, action, shares_data, rewards_pool, b_constant } =
+    req.query;
+
+  const sharesData = JSON.parse(shares_data);
+  const bConstant = new Decimal(b_constant);
+  const rewardsPool = new Decimal(rewards_pool);
+  const amountDecimal = Math.floor(amount);
+
+  let result = {
+    amountEquivalent: 0,
+    averagePrice: 0,
+    fee: 0,
+  };
+
+  if (action === "buy") {
+    const buyResult = calculatePurchaseCost(
+      sharesData,
+      bConstant,
+      choice,
+      amountDecimal,
+      rewardsPool,
+      0.02
+    );
+
+    result.amountEquivalent = buyResult.cost;
+    result.averagePrice = buyResult.averagePrice;
+    result.fee = buyResult.fee;
+  } else if (action === "sell") {
+    const sellResult = calculateSellPayout(
+      sharesData,
+      bConstant,
+      choice,
+      amountDecimal,
+      rewardsPool,
+      0.02
+    );
+
+    result.amountEquivalent = sellResult.payout;
+    result.averagePrice = sellResult.averagePrice;
+    result.fee = sellResult.fee;
+  }
+
+  res.json({ ok: true, ...result });
 }
 
 export function updateAmountInput(req, res) {

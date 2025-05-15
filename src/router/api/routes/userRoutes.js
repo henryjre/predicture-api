@@ -3,7 +3,7 @@ import express from "express";
 import {
   getUserMarketData,
   openPositions,
-  updateAmountInput,
+  calculateInputSwap,
 } from "../../../controllers/userController.js";
 import { authenticateUser } from "../../../middleware/authentication.js";
 
@@ -20,7 +20,7 @@ if (process.env.NODE_ENV === "production") {
   router.post("/market_data", getUserMarketData);
 }
 
-// GET /api/users/updateAmountInput
-router.get("/updateAmountInput", updateAmountInput);
+// GET /api/users/calculateInputSwap
+router.get("/calculateInputSwap", calculateInputSwap);
 
 export default router;
