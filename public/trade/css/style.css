@@ -323,6 +323,10 @@ footer {
   color: inherit;
 }
 
+.balance-indicator.hidden {
+  display: none;
+}
+
 .balance-indicator svg {
   width: 15px;
   height: 15px;
