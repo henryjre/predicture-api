@@ -34,7 +34,7 @@ export function calculatePurchaseCost(
   const costAfter = lmsrCost(qAfter, b);
   const rawCost = new Decimal(costAfter - costBefore); //base cost
 
-  const rewardsPoolAfter = rewards_pool.plus(rawCost);
+  const rewardsPoolAfter = new Decimal(rewards_pool).plus(rawCost);
 
   const eps = Number(
     rewardsPoolAfter
@@ -94,7 +94,7 @@ export function calculateSellPayout(
   const costAfter = lmsrCost(qAfter, b);
   const rawPayout = new Decimal(costBefore - costAfter);
 
-  const rewardsPoolAfter = rewards_pool.minus(rawPayout);
+  const rewardsPoolAfter = new Decimal(rewards_pool).minus(rawPayout);
 
   const eps =
     qAfter[choice] > 0
