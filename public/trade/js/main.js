@@ -35,9 +35,7 @@ async function loadEventTitle() {
 
       const isBuy = toggle.classList.contains("buy");
 
-      const symbolElement = document.getElementById(
-        isBuy ? "toSwapSymbol" : "fromSwapSymbol"
-      );
+      const symbolElement = document.getElementById("fromSwapSymbol");
       if (!symbolElement) return;
 
       symbolElement.textContent = selectedChoice;
@@ -46,7 +44,6 @@ async function loadEventTitle() {
       window.defaultChoice = selectedChoice;
 
       handleCalculationOfInput(isBuy ? "buy" : "sell");
-      handleWalletBalance(isBuy ? "buy" : "sell");
 
       // Close the modal after selection
       const tokenModal = document.getElementById("tokenModal");
@@ -82,9 +79,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   initModal();
 
   await loadEventTitle();
+  await displayUserMarketData();
 
   setupButtons();
-  await displayUserMarketData();
 
   // setInterval(async () => {
   //   await startAutoRefresh();

@@ -6,13 +6,10 @@ import { handleTrade } from "../backend/user.js";
 const toggle = document.getElementById("buySellToggle");
 const buyBtn = document.getElementById("buyBtn");
 const sellBtn = document.getElementById("sellBtn");
-const fromAssetBtn = document.getElementById("fromAssetBtn");
-const toAssetBtn = document.getElementById("toAssetBtn");
-const fromAssetCaret = document.getElementById("fromSwapCaret");
-const toAssetCaret = document.getElementById("toSwapCaret");
-const fromAssetSym = document.getElementById("fromSwapSymbol");
-const toAssetSym = document.getElementById("toSwapSymbol");
 const executeBtn = document.getElementById("executeBtn");
+const swapLabelFrom = document.getElementById("swapLabelFrom");
+const swapLabelTo = document.getElementById("swapLabelTo");
+const fromAssetSym = document.getElementById("fromSwapSymbol");
 
 // UI State Management
 export function setupButtons() {
@@ -29,6 +26,7 @@ export function setupButtons() {
 
 function setMode(mode) {
   const choice = window.defaultChoice || "Select Choice";
+  fromAssetSym.textContent = choice;
 
   window.toggleMode = mode;
 
@@ -38,15 +36,10 @@ function setMode(mode) {
     buyBtn.classList.add("active");
     sellBtn.classList.remove("active");
 
-    fromAssetBtn.classList.add("disabled");
-    fromAssetCaret.classList.add("hidden");
-    fromAssetSym.textContent = "Token";
+    swapLabelFrom.textContent = "You will receive";
+    swapLabelTo.textContent = "You will spend";
 
     handleWalletBalance("buy");
-
-    toAssetBtn.classList.remove("disabled");
-    toAssetCaret.classList.remove("hidden");
-    toAssetSym.textContent = choice;
 
     if (executeBtn) {
       const btnText = executeBtn.querySelector(".btn-text");
@@ -58,15 +51,10 @@ function setMode(mode) {
     sellBtn.classList.add("active");
     buyBtn.classList.remove("active");
 
-    fromAssetBtn.classList.remove("disabled");
-    fromAssetCaret.classList.remove("hidden");
-    fromAssetSym.textContent = choice;
+    swapLabelFrom.textContent = "You will spend";
+    swapLabelTo.textContent = "You will receive";
 
     handleWalletBalance("sell");
-
-    toAssetBtn.classList.add("disabled");
-    toAssetCaret.classList.add("hidden");
-    toAssetSym.textContent = "Token";
 
     if (executeBtn) {
       const btnText = executeBtn.querySelector(".btn-text");

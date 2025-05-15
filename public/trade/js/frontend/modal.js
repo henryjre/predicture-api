@@ -21,15 +21,15 @@ export function initModal() {
     modalCloseBtn.addEventListener("click", closeTokenModal);
   }
 
-  const toAssetBtn = document.getElementById("toAssetBtn");
-  const fromAssetBtn = document.getElementById("fromAssetBtn");
+  const tokenBtn = document.getElementById("tokenBtn");
+  const sharesBtn = document.getElementById("sharesBtn");
 
-  if (toAssetBtn) {
-    toAssetBtn.addEventListener("click", openTokenModal);
+  if (tokenBtn) {
+    tokenBtn.addEventListener("click", openTokenModal);
   }
 
-  if (fromAssetBtn) {
-    fromAssetBtn.addEventListener("click", openTokenModal);
+  if (sharesBtn) {
+    sharesBtn.addEventListener("click", openTokenModal);
   }
 
   // Notification modal close logic

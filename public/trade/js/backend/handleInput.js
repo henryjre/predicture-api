@@ -8,8 +8,8 @@ const SELL_COLOR = "#dc3545";
 
 function fillSummary(averagePrice, fee, inputAmount, mode) {
   const elements = {
-    fromBtn: document.getElementById("fromAssetBtn"),
-    toBtn: document.getElementById("toAssetBtn"),
+    fromBtn: document.getElementById("sharesBtn"),
+    toBtn: document.getElementById("tokenBtn"),
     summary: document.getElementById("swapSummary"),
     summaryAmt: document.getElementById("summaryAmount"),
     summaryFee: document.getElementById("summaryFee"),
@@ -100,73 +100,24 @@ function handleSyntax(e) {
   e.target.value = validateInput(e.target.value, allowDecimals);
 }
 
-async function calculateTokenToSharesBuyInput() {
-  const spendInput = document.getElementById("fromAmount");
-  const getInput = document.getElementById("toAmount");
+async function calculateSwap(action) {
+  const sharesInput = document.getElementById("fromAmount");
+  const tokenInput = document.getElementById("toAmount");
 
-  const amount = spendInput.value;
-  const action = "buy";
-  const type = "tokens";
+  const sharesAmount = parseInt(sharesInput.value);
+  if (isNaN(sharesAmount) || sharesAmount <= 0) return;
 
-  const swapResult = await handleSwapPrices(amount, action, type);
+  const swapResult = await handleSwapPrices(sharesAmount, action);
 
-  window.sharesAmount = swapResult.amountEquivalent;
-  getInput.value = swapResult.amountEquivalent;
-  fillSummary(swapResult.averagePrice, swapResult.fee, amount, "buy");
-}
-
-async function calculateSharesToTokenBuyInput() {
-  const spendInput = document.getElementById("fromAmount");
-  const getInput = document.getElementById("toAmount");
-
-  const sharesToReceive = parseInt(getInput.value);
-  const amount = sharesToReceive;
-  const action = "buy";
-  const type = "shares";
-
-  const swapResult = await handleSwapPrices(amount, action, type);
-
-  window.sharesAmount = sharesToReceive;
-  spendInput.value = swapResult.amountEquivalent;
-  fillSummary(swapResult.averagePrice, swapResult.fee, sharesToReceive, "buy");
-}
-
-async function calculateSharesToTokenSellInput() {
-  const spendInput = document.getElementById("fromAmount");
-  const getInput = document.getElementById("toAmount");
-
-  const sharesToReceive = parseInt(spendInput.value);
-  const action = "sell";
-  const type = "shares";
-
-  const swapResult = await handleSwapPrices(sharesToReceive, action, type);
-
-  window.sharesAmount = sharesToReceive;
-  getInput.value = swapResult.amountEquivalent;
-  fillSummary(swapResult.averagePrice, swapResult.fee, sharesToReceive, "sell");
-}
-
-async function calculateTokenToSharesSellInput() {
-  const spendInput = document.getElementById("fromAmount");
-  const getInput = document.getElementById("toAmount");
-
-  const tokenAmount = getInput.value;
-  const action = "sell";
-  const type = "tokens";
-
-  const swapResult = await handleSwapPrices(tokenAmount, action, type);
-
-  window.sharesAmount = swapResult.amountEquivalent;
-  spendInput.value = swapResult.amountEquivalent;
-  fillSummary(swapResult.averagePrice, swapResult.fee, tokenAmount, "sell");
+  window.sharesAmount = sharesAmount;
+  tokenInput.value = swapResult.amountEquivalent;
+  fillSummary(swapResult.averagePrice, swapResult.fee, sharesAmount, action);
 }
 
 let calculationTimeout;
 
 export function handleInput(event) {
   handleSyntax(event);
-
-  window.lastModifiedInput = event.target.id.replace("Amount", "");
 
   const toggle = document.getElementById("buySellToggle");
   const isBuy = toggle && toggle.classList.contains("buy");
@@ -185,8 +136,8 @@ function updatePlaceholder(input) {
 
 export function handleCalculationOfInput(mode) {
   const elements = {
-    spendInput: document.getElementById("fromAmount"),
-    getInput: document.getElementById("toAmount"),
+    sharesInput: document.getElementById("fromAmount"),
+    tokenInput: document.getElementById("toAmount"),
     loadingElement: document.querySelector(".balance-loading"),
     summary: document.getElementById("swapSummary"),
     executeBtn: document.getElementById("executeBtn"),
@@ -201,19 +152,13 @@ export function handleCalculationOfInput(mode) {
   elements.executeBtn.disabled = true;
   elements.summary.classList.remove("visible");
 
-  const modifiedInput =
-    window.lastModifiedInput === "from"
-      ? elements.spendInput
-      : elements.getInput;
-  const otherInput =
-    window.lastModifiedInput === "from"
-      ? elements.getInput
-      : elements.spendInput;
+  const modifiedInput = elements.sharesInput;
+  const otherInput = elements.tokenInput;
 
   if (!modifiedInput.value || modifiedInput.value === "0") {
     otherInput.value = "";
-    updatePlaceholder(elements.spendInput);
-    updatePlaceholder(elements.getInput);
+    updatePlaceholder(elements.sharesInput);
+    updatePlaceholder(elements.tokenInput);
     elements.loadingElement.style.display = "none";
     clearTimeout(calculationTimeout);
     return;
@@ -228,17 +173,9 @@ export function handleCalculationOfInput(mode) {
   calculationTimeout = setTimeout(async () => {
     try {
       if (mode === "buy") {
-        if (window.lastModifiedInput === "from") {
-          await calculateTokenToSharesBuyInput();
-        } else if (window.lastModifiedInput === "to") {
-          await calculateSharesToTokenBuyInput();
-        }
+        calculateSwap("buy");
       } else if (mode === "sell") {
-        if (window.lastModifiedInput === "from") {
-          await calculateSharesToTokenSellInput();
-        } else if (window.lastModifiedInput === "to") {
-          await calculateTokenToSharesSellInput();
-        }
+        calculateSwap("sell");
       }
     } catch (error) {
       console.error("Error during calculation:", error);
@@ -252,7 +189,7 @@ export function handleCalculationOfInput(mode) {
   }, DEBOUNCE_DELAY);
 }
 
-export async function handleSwapPrices(amount, action, type) {
+export async function handleSwapPrices(amount, action) {
   try {
     const choice = window.defaultChoice;
     const sharesData = window.sharesData;
@@ -264,7 +201,7 @@ export async function handleSwapPrices(amount, action, type) {
     }
 
     const res = await fetch(
-      `/api/users/updateAmountInput?amount=${amount}&action=${action}&type=${type}&choice=${choice}&shares_data=${JSON.stringify(
+      `/api/users/calculateInputSwap?amount=${amount}&action=${action}&choice=${choice}&shares_data=${JSON.stringify(
         sharesData
       )}&b_constant=${bConstant}&rewards_pool=${rewardsPool}`
     );

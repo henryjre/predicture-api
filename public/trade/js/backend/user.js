@@ -5,13 +5,13 @@ export async function displayUserMarketData() {
   const userMarketData = await fetchUserMarketData(window.user_id);
   const { ok, balance, openPositions } = userMarketData;
 
-  console.log(userMarketData);
+  console.log(window.marketPrices);
 
   if (!ok || Object.keys(openPositions).length === 0) {
     console.error("Error fetching user market data or no open positions");
     window.userBalance = "0.00";
     window.openPositions = Object.fromEntries(
-      Object.entries(window.marketPrices).map(([key]) => [key, 0])
+      Object.entries(window.marketPrices).map(([key, value]) => [key, 0])
     );
   } else {
     window.userBalance = balance;
@@ -46,14 +46,12 @@ async function fetchUserMarketData() {
 }
 
 export function handleWalletBalance(toggle = window.toggleMode) {
-  const balanceElement = document.getElementById("userBalance");
+  const shareBalance = document.getElementById("shareBalance");
+  const tokenBalance = document.getElementById("tokenBalance");
   const choice = window.defaultChoice || "Select Choice";
 
-  if (toggle === "buy") {
-    balanceElement.textContent = window.userBalance;
-  } else {
-    balanceElement.textContent = window.openPositions[choice] || "0";
-  }
+  tokenBalance.textContent = window.userBalance || "0.00";
+  shareBalance.textContent = window.openPositions[choice] || "0";
 }
 
 async function postTrade() {
@@ -65,8 +63,6 @@ async function postTrade() {
   const sharesAmount = window.sharesAmount;
   const choice = window.defaultChoice;
   const b_const = window.bConstant;
-
-  console.log(user_id, event_id, action, sharesAmount, choice, b_const);
 
   const res = await fetch(`/api/private/trade`, {
     method: "POST",
