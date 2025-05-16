@@ -44,6 +44,7 @@ async function loadEventTitle() {
       window.defaultChoice = selectedChoice;
 
       handleCalculationOfInput(isBuy ? "buy" : "sell");
+      handleWalletBalance(window.toggleMode);
 
       // Close the modal after selection
       const tokenModal = document.getElementById("tokenModal");
