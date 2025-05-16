@@ -1,5 +1,6 @@
 import { initSwiper } from "./swiper.js";
 import { startAutoRefresh } from "../main.js";
+import { handleTrade } from "../backend/user.js";
 
 // Modal functionality
 export function initModal() {
@@ -14,10 +15,12 @@ export function initModal() {
   }
 
   if (modalOverlay) {
+    modalOverlay.removeEventListener("click", closeTokenModal);
     modalOverlay.addEventListener("click", closeTokenModal);
   }
 
   if (modalCloseBtn) {
+    modalCloseBtn.removeEventListener("click", closeTokenModal);
     modalCloseBtn.addEventListener("click", closeTokenModal);
   }
 
@@ -25,10 +28,12 @@ export function initModal() {
   const sharesBtn = document.getElementById("sharesBtn");
 
   if (tokenBtn) {
+    tokenBtn.removeEventListener("click", openTokenModal);
     tokenBtn.addEventListener("click", openTokenModal);
   }
 
   if (sharesBtn) {
+    sharesBtn.removeEventListener("click", openTokenModal);
     sharesBtn.addEventListener("click", openTokenModal);
   }
 
@@ -36,7 +41,17 @@ export function initModal() {
   const notificationModal = document.getElementById("notificationModal");
   if (notificationModal) {
     notificationModal.querySelectorAll("[data-close]").forEach((el) => {
+      el.removeEventListener("click", hideNotificationModal);
       el.addEventListener("click", hideNotificationModal);
+    });
+  }
+
+  // Confirmation modal close logic
+  const confirmationModal = document.getElementById("confirmationModal");
+  if (confirmationModal) {
+    confirmationModal.querySelectorAll("[data-close]").forEach((el) => {
+      el.removeEventListener("click", hideConfirmationModal);
+      el.addEventListener("click", hideConfirmationModal);
     });
   }
 }
@@ -71,17 +86,6 @@ export function showNotificationModal(tradeEvent) {
       const { priceImpact, averagePricePerShare } =
         calculatePriceImpactAndAverage(tradeEvent);
 
-      // priceLabel.textContent = "Tokens Received";
-      // priceValue.innerHTML = `
-      //     1 Share
-      //     <button class="summary-btn" id="swapPrices" type="button" aria-label="Swap prices">
-      //       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-      //         <path fill="var(--regular-blue)" fill-rule="evenodd" clip-rule="evenodd" d="M16 3.93a.75.75 0 0 1 1.177-.617l4.432 3.069a.75.75 0 0 1 0 1.233l-4.432 3.069A.75.75 0 0 1 16 10.067V8H4a1 1 0 0 1 0-2h12V3.93zm-9.177 9.383A.75.75 0 0 1 8 13.93V16h12a1 1 0 1 1 0 2H8v2.067a.75.75 0 0 1-1.177.617l-4.432-3.069a.75.75 0 0 1 0-1.233l4.432-3.069z"/>
-      //       </svg>
-      //     </button>
-      //     ${averagePricePerShare} Tokens
-      //   `;
-
       if (tradeEvent.action === "buy") {
         priceLabel.textContent = "Shares Bought";
         receivedLabel.textContent = "Actual Cost";
@@ -97,6 +101,7 @@ export function showNotificationModal(tradeEvent) {
       priceImpactValue.textContent = priceImpact;
       feeValue.textContent = tradeEvent.fees + " Tokens";
 
+      modalHeader.textContent = "Transaction Successful";
       notifMessage.innerHTML =
         "<b>TRANSACTION SUCCESSFUL</b><br />Your transaction has been successfully processed. Review the transaction details below.";
       setNotificationIcon("success");
@@ -122,15 +127,13 @@ export function showNotificationModal(tradeEvent) {
   });
 }
 
-export async function hideNotificationModal() {
+async function hideNotificationModal() {
   const notificationModal = document.getElementById("notificationModal");
   const executeBtn = document.getElementById("executeBtn");
 
   if (!notificationModal) return;
   notificationModal.style.display = "none";
   executeBtn.classList.remove("loading");
-
-  await startAutoRefresh();
 }
 
 function setNotificationIcon(type) {
@@ -178,4 +181,51 @@ function calculatePriceImpactAndAverage(data) {
     priceImpact: formattedImpact,
     averagePricePerShare: averagePricePerShare,
   };
+}
+
+export function showConfirmationModal() {
+  const confirmationModal = document.getElementById("confirmationModal");
+  const confirmationMessage = confirmationModal.querySelector(
+    ".confirmation-message"
+  );
+  const confirmBtn = document.getElementById("confirmBtn");
+  const modalHeader = confirmationModal.querySelector(".modal-header");
+
+  const action = window.toggleMode;
+  const sharesAmount = window.sharesAmount;
+  const choice = window.defaultChoice;
+
+  modalHeader.classList.add(
+    action === "buy" ? "buy-confirmation" : "sell-confirmation"
+  );
+  modalHeader.textContent =
+    action === "buy" ? "Buy Confirmation" : "Sell Confirmation";
+
+  if (action === "buy") {
+    confirmationMessage.innerHTML = `<br />You are about to buy ${sharesAmount} Shares of the choice,<br/><b>${choice}</b>.`;
+  } else {
+    confirmationMessage.innerHTML = `<br />You are about to sell ${sharesAmount} Shares of the choice,<br/><b>${choice}</b>.`;
+  }
+
+  confirmationModal.style.display = "flex";
+
+  // Remove any existing event listeners
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+  // Add new event listener
+  newConfirmBtn.addEventListener("click", () => hideConfirmationModal(true));
+}
+
+function hideConfirmationModal(isTrade = false) {
+  const confirmationModal = document.getElementById("confirmationModal");
+  if (!confirmationModal) return;
+  confirmationModal.style.display = "none";
+
+  if (isTrade) {
+    setTimeout(async () => {
+      await handleTrade();
+      await startAutoRefresh(); // Move startAutoRefresh here after handleTrade completes
+    }, 1000);
+  }
 }
