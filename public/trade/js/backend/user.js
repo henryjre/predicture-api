@@ -5,8 +5,6 @@ export async function displayUserMarketData() {
   const userMarketData = await fetchUserMarketData(window.user_id);
   const { ok, balance, openPositions } = userMarketData;
 
-  console.log(window.marketPrices);
-
   if (!ok || Object.keys(openPositions).length === 0) {
     console.error("Error fetching user market data or no open positions");
     window.userBalance = "0.00";
@@ -17,6 +15,8 @@ export async function displayUserMarketData() {
     window.userBalance = balance;
     window.openPositions = openPositions;
   }
+
+  console.log(window.openPositions);
 
   handleWalletBalance();
 }
