@@ -51,7 +51,9 @@ async function buyEvent(req, res) {
     const b_constant = b_const || databaseB;
 
     // Calculate market before the update
-    const marketBefore = calculateMarketPrices(shares_data, b_constant);
+    const marketBefore = calculateMarketPrices(shares_data, b_constant, {
+      mode: "noFee",
+    });
 
     // Compute cost and new shares
     const { rawCost, fee, cost, newShares } = calculatePurchaseCost(
@@ -72,12 +74,23 @@ async function buyEvent(req, res) {
       [newShares, event_id, rawCost, fee]
     );
 
-    const marketAfter = calculateMarketPrices(newShares, b_constant);
+    const marketAfter = calculateMarketPrices(newShares, b_constant, {
+      mode: "noFee",
+    });
+
+    const percentagesAfter = calculateMarketPrices(newShares, b_constant, {
+      mode: "percentages",
+    });
+
+    const marketValues = {
+      price: marketAfter,
+      percentages: percentagesAfter,
+    };
 
     await client.query(
-      `INSERT INTO trade_history (event_id, prices, shares_bought, raw_cost)
+      `INSERT INTO trade_history (event_id, market_data, shares_bought, raw_cost)
        VALUES ($1, $2, $3, $4)`,
-      [event_id, marketAfter, shares, rawCost]
+      [event_id, marketValues, shares, rawCost]
     );
 
     await client.query(
@@ -177,7 +190,9 @@ async function sellEvent(req, res) {
     //   );
     // }
 
-    const marketBefore = calculateMarketPrices(shares_data, b_constant);
+    const marketBefore = calculateMarketPrices(shares_data, b_constant, {
+      mode: "noFee",
+    });
 
     const { rawPayout, fee, payout, newShares } = calculateSellPayout(
       shares_data,
@@ -199,12 +214,23 @@ async function sellEvent(req, res) {
       [newShares, event_id, rawPayout, fee]
     );
 
-    const marketAfter = calculateMarketPrices(newShares, b_constant);
+    const marketAfter = calculateMarketPrices(newShares, b_constant, {
+      mode: "noFee",
+    });
+
+    const percentagesAfter = calculateMarketPrices(newShares, b_constant, {
+      mode: "percentages",
+    });
+
+    const marketValues = {
+      price: marketAfter,
+      percentages: percentagesAfter,
+    };
 
     await client.query(
-      `INSERT INTO trade_history (event_id, prices, shares_bought, raw_cost)
+      `INSERT INTO trade_history (event_id, market_data, shares_bought, raw_cost)
        VALUES ($1, $2, $3, $4)`,
-      [event_id, marketAfter, shares, rawPayout]
+      [event_id, marketValues, shares, rawPayout]
     );
 
     await client.query(
@@ -283,7 +309,7 @@ export async function getChartData(req, res) {
   const { event_id } = req.params;
   try {
     const { rows } = await pool.query(
-      `SELECT snapshot_time, prices, raw_cost
+      `SELECT snapshot_time, market_data, raw_cost
        FROM trade_history
        WHERE event_id = $1
        ORDER BY snapshot_time ASC`,
@@ -291,7 +317,7 @@ export async function getChartData(req, res) {
     );
 
     const eventRes = await pool.query(
-      `SELECT event_title, shares_data, rewards_pool, to_char(closes_at, 'Month DD, YYYY') AS formatted_date
+      `SELECT event_title, b_constant, shares_data, rewards_pool, to_char(closes_at, 'Month DD, YYYY') AS formatted_date
        FROM events
        WHERE event_id = $1`,
       [event_id]
