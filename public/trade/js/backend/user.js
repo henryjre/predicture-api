@@ -84,7 +84,7 @@ async function postTrade() {
 }
 
 export async function handleTrade(e) {
-  const button = e.target;
+  const button = document.getElementById("executeBtn");
 
   try {
     const tradeEvent = await postTrade();
