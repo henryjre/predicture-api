@@ -45,7 +45,7 @@ export const authenticateApiKey = (req, res, next) => {
 };
 
 export const authenticateUser = async (req, res, next) => {
-  const { mcp_token, user_token, ...rest } = req.query;
+  const { mcp_token, user_token, uid, ...rest } = req.query;
   const jwtCookieName = process.env.JWT_COOKIE_NAME;
   const jwtCookie = req.signedCookies[jwtCookieName];
 
@@ -76,18 +76,28 @@ export const authenticateUser = async (req, res, next) => {
     }
 
     const decodedJwtToken = jwt.verify(token, process.env.JWT_SECRET);
-    const { uid, nonce } = decodedJwtToken;
 
-    if (!uid || !nonce) {
+    if (!decodedJwtToken.nonce || !decodedJwtToken.uid) {
       console.log("Missing uid or nonce in JWT");
       return res.redirect(`/html/error?id=8`);
     }
 
     // If `mcp_token` was provided, ensure user ID matches
-    if (mcp_token && String(uid) !== String(decodedMcpToken.sid)) {
+    if (
+      mcp_token &&
+      String(decodedJwtToken.uid) !== String(decodedMcpToken.sid)
+    ) {
       console.log("User ID mismatch:", {
         jwtUid: uid,
         mcpSid: decodedMcpToken.sid,
+      });
+      return res.redirect(`/html/error?id=8`);
+    }
+
+    if (uid && String(uid) !== String(decodedJwtToken.uid)) {
+      console.log("User ID mismatch:", {
+        queryUid: uid,
+        decodedUid: decodedJwtToken.uid,
       });
       return res.redirect(`/html/error?id=8`);
     }
@@ -97,10 +107,10 @@ export const authenticateUser = async (req, res, next) => {
       FROM jwt_tokens 
       WHERE user_id = $1;
     `;
-    const { rows } = await pool.query(query, [uid]);
+    const { rows } = await pool.query(query, [decodedJwtToken.uid]);
 
     if (rows.length === 0) {
-      console.log("No token found in database for user:", uid);
+      console.log("No token found in database for user:", decodedJwtToken.uid);
       return res.redirect(`/html/error?id=8`);
     }
 
@@ -111,12 +121,15 @@ export const authenticateUser = async (req, res, next) => {
       return res.redirect(`/html/error?id=8`);
     }
 
-    if (latest_nonce !== nonce) {
-      console.log("Nonce mismatch", { latest_nonce, nonce });
+    if (latest_nonce !== decodedJwtToken.nonce) {
+      console.log("Nonce mismatch", {
+        latest_nonce,
+        nonce: decodedJwtToken.nonce,
+      });
       return res.redirect(`/html/error?id=2`);
     }
 
-    req.user = { user_id: uid };
+    req.user = { user_id: decodedJwtToken.uid };
 
     // If `user_token` is present in query params, set it as a cookie
     if (user_token) {
@@ -137,7 +150,7 @@ export const authenticateUser = async (req, res, next) => {
       // Remove `user_token` and `mcp_token` from query params
       const newQuery = new URLSearchParams(rest).toString();
       const redirectUrl = newQuery
-        ? `${req.path}?${newQuery}&uid=${uid}`
+        ? `${req.path}?${newQuery}&uid=${decodedJwtToken.uid}`
         : req.path;
 
       return res.redirect(redirectUrl);
