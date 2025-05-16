@@ -28,6 +28,12 @@ export function calculatePurchaseCost(
   const costAfter = lmsrCost(qAfter, b);
   const rawCost = new Decimal(costAfter - costBefore); //base cost
 
+  const rewardsPoolAfter = new Decimal(rewards_pool).plus(rawCost);
+
+  const eps = rewardsPoolAfter
+    .div(new Decimal(qAfter[choice]))
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
   const adjustedCost = rawCost
     .times(new Decimal(1).plus(new Decimal(0.03)))
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
@@ -53,6 +59,7 @@ export function calculatePurchaseCost(
     cost: Number(totalCost),
     newShares: qAfter,
     averagePrice: averagePrice,
+    epsOfChoice: Number(eps),
   };
 }
 
@@ -113,6 +120,7 @@ export function calculateSellPayout(
         payout: "Insufficient liquidity",
         averagePrice: 0,
         message: "No liquidy to sell",
+        epsOfChoice: 0,
       };
     }
   }
@@ -146,6 +154,7 @@ export function calculateSellPayout(
     payout: Number(totalPayout), // Final amount user receives
     newShares: qAfter,
     averagePrice: averagePrice,
+    epsOfChoice: epsMap[choice],
   };
 }
 
