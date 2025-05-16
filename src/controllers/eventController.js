@@ -171,11 +171,11 @@ async function sellEvent(req, res) {
     console.log(shares_data, rewards_pool, b_constant, choice, shares);
 
     // Safety check: avoid negative share pool
-    if ((shares_data[choice] || 0) < shares) {
-      throw new Error(
-        `Insufficient shares of '${choice}' in market pool to sell.`
-      );
-    }
+    // if ((shares_data[choice] || 0) < shares) {
+    //   throw new Error(
+    //     `Insufficient shares of '${choice}' in market pool to sell.`
+    //   );
+    // }
 
     const marketBefore = calculateMarketPrices(shares_data, b_constant);
 

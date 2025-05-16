@@ -115,6 +115,7 @@ export function calculateInputSwap(req, res) {
   const amountDecimal = Math.floor(amount);
 
   let result = {
+    ok: true,
     amountEquivalent: 0,
     averagePrice: 0,
     fee: 0,
@@ -130,6 +131,7 @@ export function calculateInputSwap(req, res) {
       0.02
     );
 
+    result.ok = buyResult.ok;
     result.amountEquivalent = buyResult.cost;
     result.averagePrice = buyResult.averagePrice;
     result.fee = buyResult.fee;
@@ -143,12 +145,13 @@ export function calculateInputSwap(req, res) {
       0.02
     );
 
+    result.ok = sellResult.ok;
     result.amountEquivalent = sellResult.payout;
     result.averagePrice = sellResult.averagePrice;
     result.fee = sellResult.fee;
   }
 
-  res.json({ ok: true, ...result });
+  res.json(result);
 }
 
 export function updateAmountInput(req, res) {
