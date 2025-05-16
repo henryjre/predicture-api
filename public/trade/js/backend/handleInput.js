@@ -190,6 +190,7 @@ export function handleCalculationOfInput(mode) {
 }
 
 export async function handleSwapPrices(amount, action) {
+  const executeBtn = document.getElementById("executeBtn");
   try {
     const choice = window.defaultChoice;
     const sharesData = window.sharesData;
@@ -209,7 +210,9 @@ export async function handleSwapPrices(amount, action) {
     const data = await res.json();
 
     if (!data.ok) {
-      throw new Error(data.message || "Failed to update amount input");
+      executeBtn.disabled = true;
+    } else {
+      executeBtn.disabled = false;
     }
 
     return data;
