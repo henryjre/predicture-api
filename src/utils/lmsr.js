@@ -10,7 +10,9 @@ import Decimal from "decimal.js";
 function lmsrCost(shareMap, b) {
   const exponentials = Object.values(shareMap).map((q) => Math.exp(q / b));
   const sumExp = exponentials.reduce((acc, val) => acc + val, 0);
-  return b * Math.log(sumExp);
+  const baseCost = b * Math.log(sumExp);
+  const numOptions = Object.keys(shareMap).length;
+  return baseCost * numOptions;
 }
 
 // Calculate the cost as well as the shares data after trade
@@ -22,8 +24,6 @@ export function calculatePurchaseCost(
   rewards_pool,
   feeRate = 0.02
 ) {
-  console.log(shares, b, choice, amountToBuy, rewards_pool, feeRate);
-
   const qBefore = { ...shares };
   const qAfter = { ...shares };
 
@@ -34,18 +34,8 @@ export function calculatePurchaseCost(
   const costAfter = lmsrCost(qAfter, b);
   const rawCost = new Decimal(costAfter - costBefore); //base cost
 
-  const rewardsPoolAfter = new Decimal(rewards_pool).plus(rawCost);
-
-  const eps = Number(
-    rewardsPoolAfter
-      .div(new Decimal(qAfter[choice]))
-      .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
-  );
-
-  const poolFeeRate = calculateBuyMultiplier(eps, rawCost);
-
   const adjustedCost = rawCost
-    .times(new Decimal(1).plus(new Decimal(poolFeeRate)))
+    .times(new Decimal(1).plus(new Decimal(0.03)))
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   const fee = adjustedCost
@@ -63,6 +53,7 @@ export function calculatePurchaseCost(
       .toNumber() || 0;
 
   return {
+    ok: true,
     rawCost: Number(adjustedCost),
     fee: Number(fee),
     cost: Number(totalCost),
@@ -96,23 +87,42 @@ export function calculateSellPayout(
 
   const rewardsPoolAfter = new Decimal(rewards_pool).minus(rawPayout);
 
-  const eps =
-    qAfter[choice] > 0
-      ? Number(
-          rewardsPoolAfter
-            .div(new Decimal(qAfter[choice]))
-            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
-        )
-      : Number(
-          rewardsPoolAfter
-            .div(new Decimal(1))
-            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
-        );
+  const epsMap = {};
 
-  const multiplier = calculateSellMultiplier(eps);
+  for (const [option, shares] of Object.entries(qAfter)) {
+    epsMap[option] =
+      shares > 0
+        ? Number(
+            rewardsPoolAfter
+              .div(new Decimal(shares))
+              .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+          )
+        : 0; // or `null` if you want to avoid division by 0
+  }
+
+  const marketPricesWithFee = calculateMarketPricesWithFee(qAfter, b);
+
+  const excludedChoice = choice;
+
+  for (const option of Object.keys(qAfter)) {
+    if (option === excludedChoice) continue;
+
+    const price = marketPricesWithFee[option];
+    const eps = epsMap[option];
+
+    if (price >= eps) {
+      return {
+        ok: false,
+        fee: 0,
+        payout: "No liquidy to sell",
+        averagePrice: 0,
+        message: "No liquidy to sell",
+      };
+    }
+  }
 
   let adjustedPayout = rawPayout
-    .times(new Decimal(1).plus(new Decimal(multiplier)))
+    .times(new Decimal(1).plus(new Decimal(0.03)))
     .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
   if (adjustedPayout.isNegative()) {
@@ -134,6 +144,7 @@ export function calculateSellPayout(
       .toNumber() || 0;
 
   return {
+    ok: true,
     rawPayout: Number(adjustedPayout),
     fee: Number(fee),
     payout: Number(totalPayout), // Final amount user receives
@@ -142,8 +153,7 @@ export function calculateSellPayout(
   };
 }
 
-// Getting the actual price of shares
-export function calculateMarketPrices(shares, b) {
+export function calculatePercentages(shares, b) {
   const expShares = {};
   let sumExp = 0;
 
@@ -163,6 +173,81 @@ export function calculateMarketPrices(shares, b) {
   }
 
   return prices;
+}
+
+// Getting the actual price of shares
+export function calculateMarketPrices(shares, b) {
+  const expShares = {};
+  let sumExp = 0;
+
+  // Step 1: Compute exp(qi / b) for each outcome
+  for (const [key, q] of Object.entries(shares)) {
+    const expVal = Math.exp(q / b);
+    expShares[key] = expVal;
+    sumExp += expVal;
+  }
+
+  // Step 2: Compute marginal prices
+  const marginalPrices = {};
+  for (const [key, expVal] of Object.entries(expShares)) {
+    marginalPrices[key] = expVal / sumExp;
+  }
+
+  // Step 3: Multiply by number of shares (adjusted price)
+  const adjustedPrices = {};
+  for (const [key, price] of Object.entries(marginalPrices)) {
+    adjustedPrices[key] = price * shares[key];
+  }
+
+  // Step 4: Normalize so they start at 1 if all shares were equal
+  const firstPrice = Object.values(adjustedPrices)[0]; // baseline
+  for (const key in adjustedPrices) {
+    adjustedPrices[key] = Number(
+      new Decimal(adjustedPrices[key] / firstPrice).toDecimalPlaces(
+        4,
+        Decimal.ROUND_HALF_UP
+      )
+    );
+  }
+
+  return adjustedPrices;
+}
+
+export function calculateMarketPricesWithFee(shares, b, feeRate = 0.05) {
+  const expShares = {};
+  let sumExp = 0;
+
+  // Step 1: Compute exp(qi / b) for each outcome
+  for (const [key, q] of Object.entries(shares)) {
+    const expVal = Math.exp(q / b);
+    expShares[key] = expVal;
+    sumExp += expVal;
+  }
+
+  // Step 2: Compute marginal prices
+  const marginalPrices = {};
+  for (const [key, expVal] of Object.entries(expShares)) {
+    marginalPrices[key] = expVal / sumExp;
+  }
+
+  // Step 3: Multiply by number of shares (adjusted price)
+  const adjustedPrices = {};
+  for (const [key, price] of Object.entries(marginalPrices)) {
+    adjustedPrices[key] = price * shares[key];
+  }
+
+  // Step 4: Normalize so they start at 1 if all shares were equal
+  const firstPrice = Object.values(adjustedPrices)[0];
+  for (const key in adjustedPrices) {
+    // Apply 5% fee (buy-side) as multiplier
+    const base = adjustedPrices[key] / firstPrice;
+    const withFee = base * (1 + feeRate);
+    adjustedPrices[key] = Number(
+      new Decimal(withFee).toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+    );
+  }
+
+  return adjustedPrices;
 }
 
 // Calculate buy multiplier based on EPS
