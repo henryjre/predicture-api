@@ -42,6 +42,13 @@ function setMode(mode) {
     swapLabelFrom.textContent = "You will receive";
     swapLabelTo.textContent = "You will spend";
 
+    // Rotate the arrow 180 degrees for buy mode
+    const swapArrow = document.querySelector(".swap-divider-arrow svg");
+    if (swapArrow) {
+      swapArrow.style.transform = "rotate(180deg)";
+      swapArrow.style.transition = "transform 0.3s ease";
+    }
+
     handleWalletBalance("buy");
 
     if (executeBtn) {
@@ -56,6 +63,13 @@ function setMode(mode) {
 
     swapLabelFrom.textContent = "You will spend";
     swapLabelTo.textContent = "You will receive";
+
+    // Reset the arrow rotation for sell mode
+    const swapArrow = document.querySelector(".swap-divider-arrow svg");
+    if (swapArrow) {
+      swapArrow.style.transform = "rotate(0deg)";
+      swapArrow.style.transition = "transform 0.3s ease";
+    }
 
     handleWalletBalance("sell");
 
