@@ -105,6 +105,7 @@ export function calculateSellPayout(
   const excludedChoice = choice;
 
   for (const option of Object.keys(qAfter)) {
+    console.log(option === excludedChoice);
     if (option === excludedChoice) continue;
 
     const price = marketPricesWithFee[option];
@@ -230,17 +231,11 @@ export function calculateMarketPricesWithFee(shares, b, feeRate = 0.05) {
     marginalPrices[key] = expVal / sumExp;
   }
 
-  // Step 3: Multiply by number of shares (adjusted price)
+  // Step 3: Multiply by number of options (not shares)
   const adjustedPrices = {};
+  const numOptions = Object.keys(shares).length;
   for (const [key, price] of Object.entries(marginalPrices)) {
-    adjustedPrices[key] = price * shares[key];
-  }
-
-  // Step 4: Normalize so they start at 1 if all shares were equal
-  const firstPrice = Object.values(adjustedPrices)[0];
-  for (const key in adjustedPrices) {
-    // Apply 5% fee (buy-side) as multiplier
-    const base = adjustedPrices[key] / firstPrice;
+    const base = price * numOptions;
     const withFee = base * (1 + feeRate);
     adjustedPrices[key] = Number(
       new Decimal(withFee).toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
