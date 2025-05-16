@@ -94,7 +94,6 @@ export async function handleTrade(e) {
     }
 
     await showNotificationModal(tradeEvent);
-    handleCalculationOfInput(window.toggleMode);
   } catch (error) {
     const tradeEvent = {
       ok: false,
@@ -104,5 +103,6 @@ export async function handleTrade(e) {
     await showNotificationModal(tradeEvent);
   } finally {
     button.classList.remove("loading");
+    handleCalculationOfInput(window.toggleMode);
   }
 }
