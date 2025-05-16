@@ -377,6 +377,23 @@
       </div>
     </div>
 
+    <!-- CONFIRMATION MODAL -->
+    <div id="confirmationModal" class="modal" style="display: none">
+      <div class="modal-overlay" data-close></div>
+      <div class="modal-content confirmation-modal-content">
+        <button class="modal-close" data-close>&times;</button>
+        <div class="modal-header">Confirm Swap</div>
+        <div class="confirmation-modal-body">
+          <div class="confirmation-message">
+            The transaction cannot succeed due to error: execution reverted:
+            PancakeRouter: <br />
+            <b>INSUFFICIENT_OUTPUT_AMOUNT.</b>
+          </div>
+          <button class="confirmation-btn" id="confirmBtn">Confirm</button>
+        </div>
+      </div>
+    </div>
+
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>

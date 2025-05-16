@@ -14,6 +14,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 body {
   font-family: "Poppins", sans-serif;
@@ -916,7 +918,8 @@ footer {
 }
 
 /* Notification Modal Styles */
-#notificationModal .modal-content.notification-modal-content {
+#notificationModal .modal-content.notification-modal-content,
+#confirmationModal .modal-content.confirmation-modal-content {
   background: var(--white-blue);
   max-width: 600px;
   width: 90%;
@@ -928,7 +931,8 @@ footer {
   padding: 0 0 2rem 0;
 }
 
-#notificationModal .modal-header {
+#notificationModal .modal-header,
+#confirmationModal .modal-header {
   padding-top: 1rem;
   text-align: center;
   font-size: 1.15rem;
@@ -937,12 +941,20 @@ footer {
   margin-bottom: 0.5rem;
 }
 
-.notification-modal-body {
+.notification-modal-body,
+.confirmation-modal-body {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.notification-modal-body {
   padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.confirmation-modal-body {
+  padding: 0.5rem 1.5rem 0 1.5rem;
 }
 
 .notification-icon {
@@ -963,7 +975,25 @@ footer {
 }
 
 .notification-message b {
+  color: var(--dark-blue);
+}
+
+.confirmation-message {
+  color: var(--dark-blue);
+  font-size: 1rem;
+  margin-bottom: 24px;
+}
+
+.confirmation-message b {
   color: var(--regular-blue);
+}
+.modal-header.buy-confirmation {
+  color: var(--buy-green);
+  font-weight: bold;
+}
+.modal-header.sell-confirmation {
+  color: var(--sell-red);
+  font-weight: bold;
 }
 
 .notification-swap-details {
@@ -1001,7 +1031,8 @@ footer {
   margin-bottom: 0;
 }
 
-.notification-dismiss-btn {
+.notification-dismiss-btn,
+.confirmation-btn {
   background: var(--dark-blue);
   color: var(--white-blue);
   border: none;
@@ -1012,18 +1043,22 @@ footer {
   cursor: pointer;
   transition: background 0.2s;
   margin-top: 0.5rem;
+  font-family: inherit;
 }
 
-.notification-dismiss-btn:hover {
+.notification-dismiss-btn:hover,
+.confirmation-btn:hover {
   background: var(--regular-blue);
 }
 
-#notificationModal .modal-overlay {
+#notificationModal .modal-overlay,
+#confirmationModal .modal-overlay {
   background: rgba(0, 0, 0, 0.4);
 }
 
 /* Modal close button color for notification modal */
-#notificationModal .modal-close {
+#notificationModal .modal-close,
+#confirmationModal .modal-close {
   color: var(--dark-blue);
 }
 
