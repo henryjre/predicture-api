@@ -678,17 +678,21 @@ footer {
   max-width: 450px;
   margin: 0.5rem;
   background: transparent;
-  color: var(--dark-blue);
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 500;
-  font-size: 14px;
+  flex-direction: column;
   position: relative;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .summary-container.visible {
   display: flex;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--dark-blue);
+  font-weight: 500;
+  font-size: 14px;
 }
 
 .summary-fee .summary-amount {
@@ -704,6 +708,11 @@ footer {
   font-weight: inherit;
 }
 
+.summary-row.summary-row-eps {
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.3rem;
+}
 .summary-btn {
   background: none;
   border: none;
