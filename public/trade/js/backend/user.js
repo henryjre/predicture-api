@@ -50,8 +50,8 @@ export function handleWalletBalance(toggle = window.toggleMode) {
   const tokenBalance = document.getElementById("tokenBalance");
   const choice = window.defaultChoice || "Select Choice";
 
-  tokenBalance.textContent = window.userBalance || "0.00";
-  shareBalance.textContent = window.openPositions[choice] || "0";
+  tokenBalance.textContent = (window.userBalance || "0.00") + " Tokens";
+  shareBalance.textContent = (window.openPositions[choice] || "0") + " Shares";
 }
 
 async function postTrade() {
