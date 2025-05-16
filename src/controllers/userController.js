@@ -112,6 +112,7 @@ export function calculateInputSwap(req, res) {
     amountEquivalent: 0,
     averagePrice: 0,
     fee: 0,
+    epsOfChoice: 0,
   };
 
   if (action === "buy") {
@@ -128,6 +129,7 @@ export function calculateInputSwap(req, res) {
     result.amountEquivalent = buyResult.cost;
     result.averagePrice = buyResult.averagePrice;
     result.fee = buyResult.fee;
+    result.epsOfChoice = buyResult.epsOfChoice;
   } else if (action === "sell") {
     const sellResult = calculateSellPayout(
       sharesData,
@@ -142,6 +144,7 @@ export function calculateInputSwap(req, res) {
     result.amountEquivalent = sellResult.payout;
     result.averagePrice = sellResult.averagePrice;
     result.fee = sellResult.fee;
+    result.epsOfChoice = sellResult.epsOfChoice;
   }
 
   res.json(result);
