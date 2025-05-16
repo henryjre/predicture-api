@@ -17,6 +17,9 @@ export function setupButtons() {
   sellBtn.addEventListener("click", () => setMode("sell"));
 
   executeBtn.addEventListener("click", async (event) => {
+    if (executeBtn.classList.contains("loading")) return;
+    executeBtn.classList.add("loading");
+
     await handleTrade(event);
   });
 
