@@ -67,8 +67,6 @@ export function showNotificationModal(tradeEvent) {
     const feeValue = document.getElementById("feeValue");
     const dismissBtn = document.getElementById("dismissBtn");
 
-    console.log(tradeEvent);
-
     if (tradeEvent.ok) {
       const { priceImpact, averagePricePerShare } =
         calculatePriceImpactAndAverage(tradeEvent);
