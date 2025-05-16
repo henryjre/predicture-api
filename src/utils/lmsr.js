@@ -101,7 +101,6 @@ export function calculateSellPayout(
   const excludedChoice = choice;
 
   for (const option of Object.keys(qAfter)) {
-    console.log(option === excludedChoice);
     if (option === excludedChoice) continue;
 
     const price = marketPricesWithFee[option];
