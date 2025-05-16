@@ -12,7 +12,7 @@ const router = Router();
 router.get("/:event_id/prices", dynamicLimiter, getChartData);
 
 // GET /api/events/{event_id}/prices
-router.get("/:event_id/current_market", dynamicLimiter, getCurrenMarketData);
+router.get("/:event_id/current_market", getCurrenMarketData);
 
 // GET /api/events/{event_id}/data
 router.get("/:event_id/data", dynamicLimiter, getEventData);
