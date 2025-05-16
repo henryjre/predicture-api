@@ -39,16 +39,16 @@ async function fetchData(id) {
 function updateLatestPriceMarkers(latest, colors) {
   const container = document.getElementById("customLegend");
   container.innerHTML = "";
-  if (!latest?.prices) return;
+  if (!latest?.market_data?.price) return;
 
-  Object.entries(latest.prices).forEach(([key, val], i) => {
+  Object.entries(latest.market_data.percentages).forEach(([key, val], i) => {
     const item = document.createElement("div");
     item.classList.add("legend-item");
     const dot = document.createElement("span");
     dot.classList.add("legend-dot");
     dot.style.backgroundColor = colors[i % colors.length];
     const label = document.createElement("span");
-    label.textContent = `${key} ${(val * 100).toFixed(1)}%`;
+    label.textContent = `${key} ${val.toFixed(2)}%`;
     item.append(dot, label);
     container.append(item);
   });
@@ -64,14 +64,22 @@ function renderChart(title, data) {
   const colors = ["#007bff", "#dc3545", "#6f42c1", "#28a745", "#ffc107"];
   if (!Array.isArray(data) || data.length === 0) {
     document.getElementById("noDataMessage").style.display = "block";
-    data = [{ snapshot_time: new Date(), prices: { A: 0, B: 0, C: 0 } }];
+    data = [
+      {
+        snapshot_time: new Date(),
+        market_data: {
+          price: { A: 0, B: 0, C: 0 },
+          percentages: { A: 0, B: 0, C: 0 },
+        },
+      },
+    ];
   } else {
     document.getElementById("noDataMessage").style.display = "none";
   }
 
   updateLatestPriceMarkers(data[data.length - 1], colors);
 
-  const allValues = data.flatMap((d) => Object.values(d.prices));
+  const allValues = data.flatMap((d) => Object.values(d.market_data.price));
 
   const minVal = Math.min(...allValues);
   const maxVal = Math.max(...allValues);
@@ -82,10 +90,10 @@ function renderChart(title, data) {
   const suggestedMax = maxVal + padding;
 
   const labels = data.map((d) => new Date(d.snapshot_time));
-  const keys = Object.keys(data[0].prices);
+  const keys = Object.keys(data[0].market_data.price);
   const datasets = keys.map((k, i) => ({
     label: k,
-    data: data.map((d) => d.prices[k]),
+    data: data.map((d) => d.market_data.price[k]),
     borderColor: colors[i % colors.length],
     fill: false,
     tension: 0.2,
@@ -347,6 +355,7 @@ async function loadAndRender() {
   document.getElementById("loadingSpinner").style.display = "block";
   try {
     const json = await fetchData(eventId);
+    console.log(json);
     originalData = json.data || [];
 
     // Volume
@@ -430,8 +439,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Swiper for filter buttons
-const filterSwiper = new Swiper('.filter-swiper', {
-  slidesPerView: 'auto',
+const filterSwiper = new Swiper(".filter-swiper", {
+  slidesPerView: "auto",
   spaceBetween: 8,
   freeMode: true,
   grabCursor: true,
