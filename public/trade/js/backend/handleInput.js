@@ -6,13 +6,14 @@ const MAX_DECIMALS = 2;
 const BUY_COLOR = "#28a745";
 const SELL_COLOR = "#dc3545";
 
-function fillSummary(averagePrice, fee, inputAmount, mode) {
+function fillSummary(averagePrice, fee, epsOfChoice, inputAmount, mode) {
   const elements = {
     fromBtn: document.getElementById("sharesBtn"),
     toBtn: document.getElementById("tokenBtn"),
     summary: document.getElementById("swapSummary"),
     summaryAmt: document.getElementById("summaryAmount"),
     summaryFee: document.getElementById("summaryFee"),
+    summaryEps: document.getElementById("summaryEps"),
   };
 
   // Validate all required elements exist
@@ -42,6 +43,7 @@ function fillSummary(averagePrice, fee, inputAmount, mode) {
   `;
 
   elements.summaryFee.textContent = `Fee ${fee}`;
+  elements.summaryEps.textContent = `EPS ${epsOfChoice} Tokens`;
 
   if (inputAmount <= 0) {
     elements.summary.classList.remove("visible");
@@ -111,7 +113,13 @@ async function calculateSwap(action) {
 
   window.sharesAmount = sharesAmount;
   tokenInput.value = swapResult.amountEquivalent;
-  fillSummary(swapResult.averagePrice, swapResult.fee, sharesAmount, action);
+  fillSummary(
+    swapResult.averagePrice,
+    swapResult.fee,
+    swapResult.epsOfChoice,
+    sharesAmount,
+    action
+  );
 }
 
 let calculationTimeout;
