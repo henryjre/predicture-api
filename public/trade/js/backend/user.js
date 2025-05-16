@@ -85,9 +85,6 @@ async function postTrade() {
 
 export async function handleTrade(e) {
   const button = e.target;
-  if (button.classList.contains("loading")) return;
-
-  button.classList.add("loading");
 
   try {
     const tradeEvent = await postTrade();
