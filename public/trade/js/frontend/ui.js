@@ -1,7 +1,6 @@
 import { handleCalculationOfInput } from "../backend/handleInput.js";
 import { handleWalletBalance } from "../backend/user.js";
-import { showNotificationModal } from "./modal.js";
-import { handleTrade } from "../backend/user.js";
+import { showConfirmationModal } from "./modal.js";
 
 const toggle = document.getElementById("buySellToggle");
 const buyBtn = document.getElementById("buyBtn");
@@ -16,11 +15,10 @@ export function setupButtons() {
   buyBtn.addEventListener("click", () => setMode("buy"));
   sellBtn.addEventListener("click", () => setMode("sell"));
 
-  executeBtn.addEventListener("click", async (event) => {
+  executeBtn.addEventListener("click", (event) => {
     if (executeBtn.classList.contains("loading")) return;
     executeBtn.classList.add("loading");
-
-    await handleTrade(event);
+    showConfirmationModal();
   });
 
   // Default to buy
