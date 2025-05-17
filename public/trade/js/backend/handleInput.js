@@ -149,6 +149,8 @@ export function handleCalculationOfInput(mode) {
     loadingElement: document.querySelector(".balance-loading"),
     summary: document.getElementById("swapSummary"),
     executeBtn: document.getElementById("executeBtn"),
+    bottomSpacer: document.querySelector(".bottom-spacer"),
+    bottomInfoText: document.querySelector(".bottom-info-text"),
   };
 
   // Validate required elements
@@ -169,6 +171,8 @@ export function handleCalculationOfInput(mode) {
     updatePlaceholder(elements.tokenInput);
     elements.loadingElement.style.display = "none";
     clearTimeout(calculationTimeout);
+    elements.bottomSpacer.style.display = "block";
+    elements.bottomInfoText.style.display = "none";
     return;
   }
 
@@ -199,6 +203,8 @@ export function handleCalculationOfInput(mode) {
 
 export async function handleSwapPrices(amount, action) {
   const executeBtn = document.getElementById("executeBtn");
+  const bottomSpacer = document.querySelector(".bottom-spacer");
+  const bottomInfoText = document.querySelector(".bottom-info-text");
   try {
     const choice = window.defaultChoice;
     const sharesData = window.sharesData;
@@ -221,6 +227,14 @@ export async function handleSwapPrices(amount, action) {
       executeBtn.disabled = true;
     } else {
       executeBtn.disabled = false;
+    }
+
+    if (data.amountEquivalent === "Insufficient Liquidity") {
+      bottomSpacer.style.display = "none";
+      bottomInfoText.style.display = "block";
+    } else {
+      bottomSpacer.style.display = "block";
+      bottomInfoText.style.display = "none";
     }
 
     return data;
