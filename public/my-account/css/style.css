@@ -20,6 +20,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 body {
   font-family: "Poppins", sans-serif;
@@ -667,13 +669,16 @@ footer {
 }
 
 .footer-container {
-  margin: 0 2rem;
-  padding: 0 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 2rem;
+  margin: 0 20rem;
+
+  @media (max-width: 768px) {
+    margin: 0 1rem;
+  }
 }
 
 .footer-left {
