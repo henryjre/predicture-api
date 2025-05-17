@@ -117,7 +117,7 @@ export function calculateSellPayout(
       return {
         ok: false,
         fee: 0,
-        payout: "Insufficient liquidity",
+        payout: "Insufficient Liquidity",
         averagePrice: 0,
         message: "No liquidy to sell",
         epsOfChoice: 0,
