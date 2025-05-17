@@ -413,7 +413,7 @@ function updateFades() {
   const wrapper = document.getElementById("filterWrapper");
   const scroller = document.getElementById("filterButtons");
   const { scrollLeft, scrollWidth, clientWidth } = scroller;
-  wrapper.classList.toggle("hide-fade-left", scrollLeft <= 0);
+  wrapper.classList.toggle("hide-fade-left", scrollLeft <= 1);
   wrapper.classList.toggle(
     "hide-fade-right",
     scrollLeft + clientWidth >= scrollWidth - 1
